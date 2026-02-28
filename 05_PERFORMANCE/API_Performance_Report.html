@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Performance Report - Sigo Live</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f1117 100%); padding: 32px 40px; border-bottom: 1px solid #1e293b; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #fff; }
+  .header p { color: #94a3b8; margin-top: 6px; font-size: 14px; }
+  .badge { display: inline-block; background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; border-radius: 20px; padding: 3px 12px; font-size: 12px; margin-left: 12px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+  .kpi-grid { display: grid; grid-template-colappsettings.Development.jsonumns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+  .kpi { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+  .kpi .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 32px; font-weight: 700; margin-top: 8px; color: #fff; }
+  .kpi .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .kpi.warn .value { color: #f59e0b; }
+  .kpi.danger .value { color: #ef4444; }
+  .kpi.ok .value { color: #22c55e; }
+  .section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+  .section h2 { font-size: 16px; font-weight: 600; color: #f1f5f9; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .section h2 span.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .chart-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+  .chart-box h3 { font-size: 14px; color: #94a3b8; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 10px 14px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #334155; }
+  tbody tr { border-bottom: 1px solid #1e293b; transition: background 0.15s; }
+  tbody tr:hover { background: #0f1f35; }
+  tbody td { padding: 11px 14px; color: #cbd5e1; }
+  .path { color: #60a5fa; font-family: monospace; font-size: 12px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .pill-get { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  .pill-post { background: #2563eb22; color: #60a5fa; border: 1px solid #2563eb44; }
+  .bar-bg { background: #0f1117; border-radius: 4px; height: 6px; min-width: 60px; }
+  .bar-fill { height: 6px; border-radius: 4px; background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .bar-fill.slow { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .bar-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .footer { text-align: center; color: #475569; font-size: 12px; padding: 32px; }
+  .rank { color: #475569; font-size: 12px; }
+  .tag-slow { color: #f59e0b; font-size: 11px; font-weight: 600; }
+  .tag-ok { color: #22c55e; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>API Performance Report <span class="badge">LIVE</span></h1>
+  <p>Database: Sigo_Live_Log &nbsp;|&nbsp; Bảng: dbo."Log_APIRequest" &nbsp;|&nbsp; Tổng records: 8,372,602 &nbsp;|&nbsp; Báo cáo: 30 ngày gần nhất &nbsp;|&nbsp; Tạo lúc: 25/02/2026</p>
+</div>
+
+<div class="container">
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi ok">
+      <div class="label">Tổng lượt gọi API (30 ngày)</div>
+      <div class="value">~680K</div>
+      <div class="sub">Trung bình ~22,700 / ngày</div>
+    </div>
+    <div class="kpi">
+      <div class="label">API gọi nhiều nhất</div>
+      <div class="value" style="font-size:18px; color:#60a5fa">GetOTP</div>
+      <div class="sub">460,229 lượt · avg 1.75ms</div>
+    </div>
+    <div class="kpi warn">
+      <div class="label">API chậm nhất (avg)</div>
+      <div class="value" style="font-size:18px">42,667ms</div>
+      <div class="sub">QuickOrderRequest/RenterCancel</div>
+    </div>
+    <div class="kpi danger">
+      <div class="label">API nặng tải cao (UpdateBookingInfo)</div>
+      <div class="value" style="font-size:18px">8,762</div>
+      <div class="sub">avg 2,806ms · p95 7,228ms</div>
+    </div>
+  </div>
+
+  <!-- Charts row 1 -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <h3>Top 10 API theo lượt gọi (30 ngày)</h3>
+      <canvas id="chartTopCalls" height="260"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Lượng request theo ngày (14 ngày gần nhất)</h3>
+      <canvas id="chartDaily" height="260"></canvas>
+    </div>
+  </div>
+
+  <!-- Charts row 2 -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <h3>Avg Response Time theo giờ trong ngày (7 ngày)</h3>
+      <canvas id="chartHourly" height="240"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Top 10 API chậm nhất - Avg Runtime (ms)</h3>
+      <canvas id="chartSlow" height="240"></canvas>
+    </div>
+  </div>
+
+  <!-- Table: Top API by calls -->
+  <div class="section">
+    <h2><span class="dot" style="background:#3b82f6"></span>Top 30 API — Lượt gọi nhiều nhất (30 ngày)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>API Path</th>
+          <th class="num">Tổng lượt</th>
+          <th class="num">Avg (ms)</th>
+          <th class="num">P95 (ms)</th>
+          <th class="num">Max (ms)</th>
+          <th style="width:120px">Load bar</th>
+          <th>Đánh giá</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="rank">1</td><td class="path">/api/v1/Account/GetOTP</td><td class="num">460,229</td><td class="num">1.75</td><td class="num">1.91</td><td class="num">877</td><td><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div></td><td><span class="tag-ok">Nhanh</span></td></tr>
+        <tr><td class="rank">2</td><td class="path">/api/v1/DashboardForWebsite/GetListDataWithSlug</td><td class="num">56,269</td><td class="num">70.54</td><td class="num">260</td><td class="num">6,586</td><td><div class="bar-bg"><div class="bar-fill" style="width:12%"></div></div></td><td><span class="tag-ok">Chấp nhận</span></td></tr>
+        <tr><td class="rank">3</td><td class="path">/api/v1/GlobalAppSetting/KeepSessionAlive</td><td class="num">43,183</td><td class="num">0.10</td><td class="num">0.12</td><td class="num">11</td><td><div class="bar-bg"><div class="bar-fill" style="width:9%"></div></div></td><td><span class="tag-ok">Nhanh</span></td></tr>
+        <tr><td class="rank">4</td><td class="path">/api/v1/NotificationSender/SendMessage</td><td class="num">36,307</td><td class="num">0.48</td><td class="num">0.80</td><td class="num">6</td><td><div class="bar-bg"><div class="bar-fill" style="width:8%"></div></div></td><td><span class="tag-ok">Nhanh</span></td></tr>
+        <tr><td class="rank">5</td><td class="path">/api/v1/SearchingRentalService/List</td><td class="num">26,785</td><td class="num" style="color:#f87171">1,781</td><td class="num" style="color:#f87171">3,164</td><td class="num" style="color:#ef4444">335,733</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:100%"></div></div></td><td><span class="tag-slow">CHẬM</span></td></tr>
+        <tr><td class="rank">6</td><td class="path">/api/v1/SearchingRentalService/Detail</td><td class="num">21,341</td><td class="num" style="color:#f87171">1,982</td><td class="num" style="color:#f87171">4,018</td><td class="num" style="color:#ef4444">30,261</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:80%"></div></div></td><td><span class="tag-slow">CHẬM</span></td></tr>
+        <tr><td class="rank">7</td><td class="path">/api/v1/User/GetSetting</td><td class="num">11,522</td><td class="num" style="color:#fbbf24">55.92</td><td class="num">64</td><td class="num">504</td><td><div class="bar-bg"><div class="bar-fill" style="width:2%"></div></div></td><td><span class="tag-ok">Chấp nhận</span></td></tr>
+        <tr><td class="rank">8</td><td class="path">/api/v2/User/HomePage_App</td><td class="num">11,415</td><td class="num">40.57</td><td class="num">18</td><td class="num">14,877</td><td><div class="bar-bg"><div class="bar-fill" style="width:2%"></div></div></td><td><span class="tag-ok">Chấp nhận</span></td></tr>
+        <tr><td class="rank">9</td><td class="path">/api/v1/SearchingRentalService/GetSettingApp</td><td class="num">10,441</td><td class="num">21.81</td><td class="num">33</td><td class="num">1,049</td><td><div class="bar-bg"><div class="bar-fill" style="width:2%"></div></div></td><td><span class="tag-ok">Tốt</span></td></tr>
+        <tr><td class="rank">10</td><td class="path">/api/v1/SearchingRentalService/CheckBeforeUpdateBookingInfo</td><td class="num">9,578</td><td class="num" style="color:#fbbf24">784</td><td class="num" style="color:#fbbf24">2,669</td><td class="num" style="color:#f87171">15,033</td><td><div class="bar-bg"><div class="bar-fill slow" style="width:2%"></div></div></td><td><span class="tag-slow">CẦN XEM</span></td></tr>
+        <tr><td class="rank">11</td><td class="path">/api/v1/SearchingRentalService/UpdateBookingInfo</td><td class="num">8,762</td><td class="num" style="color:#ef4444">2,806</td><td class="num" style="color:#ef4444">7,228</td><td class="num" style="color:#ef4444">45,044</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:2%"></div></div></td><td><span class="tag-slow">CHẬM</span></td></tr>
+        <tr><td class="rank">12</td><td class="path">/api/v1/User/Options</td><td class="num">7,589</td><td class="num">1.40</td><td class="num">1.72</td><td class="num">244</td><td><div class="bar-bg"><div class="bar-fill" style="width:1%"></div></div></td><td><span class="tag-ok">Nhanh</span></td></tr>
+        <tr><td class="rank">13</td><td class="path">/api/v1/SearchingRentalService/SaveLog_UserClick_Rent</td><td class="num">6,329</td><td class="num">1.64</td><td class="num">2.20</td><td class="num">144</td><td><div class="bar-bg"><div class="bar-fill" style="width:1%"></div></div></td><td><span class="tag-ok">Nhanh</span></td></tr>
+        <tr><td class="rank">14</td><td class="path">/api/v1/RentalService/GetOrderDetail</td><td class="num">3,959</td><td class="num" style="color:#ef4444">2,199</td><td class="num" style="color:#ef4444">2,679</td><td class="num" style="color:#ef4444">3,648</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:1%"></div></div></td><td><span class="tag-slow">CHẬM</span></td></tr>
+        <tr><td class="rank">15</td><td class="path">/api/v1/Account/Register</td><td class="num">3,788</td><td class="num" style="color:#fbbf24">944</td><td class="num" style="color:#fbbf24">1,853</td><td class="num">3,172</td><td><div class="bar-bg"><div class="bar-fill slow" style="width:1%"></div></div></td><td><span class="tag-slow">CẦN XEM</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table: Slow APIs -->
+  <div class="section">
+    <h2><span class="dot" style="background:#ef4444"></span>API chậm nhất — Avg Response Time > 1,000ms (30 ngày)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>API Path</th>
+          <th class="num">Lượt gọi</th>
+          <th class="num">Avg (ms)</th>
+          <th class="num">P95 (ms)</th>
+          <th class="num">Max (ms)</th>
+          <th style="width:140px">Performance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="rank">1</td><td class="path">/api/v1/QuickOrderRequest/RenterCancel</td><td class="num">5</td><td class="num" style="color:#ef4444">42,667</td><td class="num" style="color:#ef4444">72,544</td><td class="num" style="color:#ef4444">74,582</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:100%"></div></div></td></tr>
+        <tr><td class="rank">2</td><td class="path">/api/v1/QuickOrderRequest/Booking</td><td class="num">9</td><td class="num" style="color:#ef4444">13,450</td><td class="num" style="color:#ef4444">21,979</td><td class="num" style="color:#ef4444">22,395</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:32%"></div></div></td></tr>
+        <tr><td class="rank">3</td><td class="path">/api/v1/Order_ListView_RentCar/OwnerConfirm</td><td class="num">7</td><td class="num" style="color:#ef4444">9,051</td><td class="num" style="color:#ef4444">25,800</td><td class="num" style="color:#ef4444">26,732</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:21%"></div></div></td></tr>
+        <tr><td class="rank">4</td><td class="path">/api/v1/Order_ListView_RentCar/OwnerCancel</td><td class="num">89</td><td class="num" style="color:#ef4444">8,988</td><td class="num" style="color:#ef4444">24,861</td><td class="num" style="color:#ef4444">31,853</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:21%"></div></div></td></tr>
+        <tr><td class="rank">5</td><td class="path">/api/v1/RentalService/OrderConfirm</td><td class="num">40</td><td class="num" style="color:#ef4444">8,829</td><td class="num" style="color:#ef4444">26,545</td><td class="num" style="color:#ef4444">26,852</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:21%"></div></div></td></tr>
+        <tr><td class="rank">6</td><td class="path">/api/v1/Order_ListView_RentCar/OwnerCancel</td><td class="num">89</td><td class="num" style="color:#ef4444">8,988</td><td class="num" style="color:#ef4444">24,861</td><td class="num" style="color:#ef4444">31,853</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:21%"></div></div></td></tr>
+        <tr><td class="rank">7</td><td class="path">/api/v1/RentalService/UpdateRentalServiceStatus</td><td class="num">32</td><td class="num" style="color:#f87171">5,742</td><td class="num" style="color:#f87171">6,622</td><td class="num" style="color:#f87171">7,167</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:13%"></div></div></td></tr>
+        <tr><td class="rank">8</td><td class="path">/api/v1/Traffic_Vehicle/CheckTrafficTicket</td><td class="num">128</td><td class="num" style="color:#f87171">5,432</td><td class="num" style="color:#f87171">18,667</td><td class="num" style="color:#ef4444">34,447</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:13%"></div></div></td></tr>
+        <tr><td class="rank">9</td><td class="path">/api/v1/RentalService/OrderCancel</td><td class="num">208</td><td class="num" style="color:#f87171">3,975</td><td class="num" style="color:#ef4444">21,437</td><td class="num" style="color:#ef4444">29,002</td><td><div class="bar-bg"><div class="bar-fill danger" style="width:9%"></div></div></td></tr>
+        <tr><td class="rank">10</td><td class="path">/api/v1/SearchingRentalService/UpdateBookingInfo</td><td class="num" style="color:#f87171">8,762</td><td class="num" style="color:#fbbf24">2,806</td><td class="num" style="color:#fbbf24">7,228</td><td class="num" style="color:#ef4444">45,044</td><td><div class="bar-bg"><div class="bar-fill slow" style="width:7%"></div></div></td></tr>
+        <tr><td class="rank">11</td><td class="path">/api/v1/RentalService/GetOrderDetail</td><td class="num">3,959</td><td class="num" style="color:#fbbf24">2,199</td><td class="num" style="color:#fbbf24">2,679</td><td class="num">3,648</td><td><div class="bar-bg"><div class="bar-fill slow" style="width:5%"></div></div></td></tr>
+        <tr><td class="rank">12</td><td class="path">/api/v1/QuickOrderRequestDetail/List</td><td class="num">394</td><td class="num" style="color:#fbbf24">3,105</td><td class="num" style="color:#fbbf24">9,418</td><td class="num" style="color:#ef4444">19,209</td><td><div class="bar-bg"><div class="bar-fill slow" style="width:7%"></div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  Sigo Live — API Performance Report &nbsp;|&nbsp; Dữ liệu từ DB Log: 103.57.211.148 / Sigo_Live_Log &nbsp;|&nbsp; 25/02/2026
+</div>
+
+<script>
+// Chart 1: Top API by calls
+new Chart(document.getElementById('chartTopCalls'), {
+  type: 'bar',
+  data: {
+    labels: ['GetOTP','Dashboard/Slug','KeepSession','SendMessage','Search/List','Search/Detail','User/GetSetting','HomePage_App','GetSettingApp','CheckBooking'],
+    datasets: [{
+      label: 'Lượt gọi',
+      data: [460229, 56269, 43183, 36307, 26785, 21341, 11522, 11415, 10441, 9578],
+      backgroundColor: ['#3b82f6','#6366f1','#8b5cf6','#06b6d4','#ef4444','#f87171','#22c55e','#10b981','#0ea5e9','#f59e0b'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+    }
+  }
+});
+
+// Chart 2: Daily trend
+new Chart(document.getElementById('chartDaily'), {
+  type: 'line',
+  data: {
+    labels: ['11/2','12/2','13/2','14/2','15/2','16/2','17/2','18/2','19/2','20/2','21/2','22/2','23/2','24/2','25/2'],
+    datasets: [{
+      label: 'Lượt gọi',
+      data: [24143, 31343, 31117, 20611, 24874, 24959, 22750, 22120, 23191, 19369, 17056, 11959, 19876, 29540, 6804],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.1)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#3b82f6',
+    }, {
+      label: 'Avg ms',
+      data: [231.1, 199.0, 263.8, 397.3, 510.8, 441.9, 340.2, 263.5, 394.0, 284.0, 180.4, 125.3, 86.0, 54.3, 92.0],
+      borderColor: '#f59e0b',
+      backgroundColor: 'transparent',
+      tension: 0.4,
+      yAxisID: 'y2',
+      pointBackgroundColor: '#f59e0b',
+    }]
+  },
+  options: {
+    plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' }, position: 'left' },
+      y2: { ticks: { color: '#f59e0b' }, grid: { display: false }, position: 'right' }
+    }
+  }
+});
+
+// Chart 3: Hourly
+new Chart(document.getElementById('chartHourly'), {
+  type: 'bar',
+  data: {
+    labels: Array.from({length:24}, (_,i)=> i+'h'),
+    datasets: [{
+      label: 'Lượt gọi',
+      data: [3763,12098,8026,8293,6768,6501,7245,8475,8609,7087,6296,5436,4675,6658,6345,5421,5211,6305,3682,3307,2543,2669,3455,4884],
+      backgroundColor: 'rgba(99,102,241,0.7)',
+      borderRadius: 4,
+    }, {
+      label: 'Avg ms',
+      data: [177.6,77.8,96.4,201.4,210.2,276.3,274.1,194.6,181.6,240.2,205.1,303.2,310.5,308.6,301.9,277.9,309.2,75.5,122.1,58.5,40.0,128.7,51.4,83.0],
+      type: 'line',
+      borderColor: '#f59e0b',
+      backgroundColor: 'transparent',
+      tension: 0.4,
+      yAxisID: 'y2',
+      pointRadius: 2,
+    }]
+  },
+  options: {
+    plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
+    scales: {
+      x: { ticks: { color: '#64748b', font:{size:10} }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+      y2: { ticks: { color: '#f59e0b' }, grid: { display: false }, position: 'right' }
+    }
+  }
+});
+
+// Chart 4: Slow APIs
+new Chart(document.getElementById('chartSlow'), {
+  type: 'bar',
+  data: {
+    labels: ['QuickOrder/RenterCancel','QuickOrder/Booking','OwnerConfirm','OwnerCancel','OrderConfirm','UpdateRentalStatus','CheckTrafficTicket','OrderCancel','UpdateBookingInfo','GetOrderDetail'],
+    datasets: [{
+      label: 'Avg ms',
+      data: [42667, 13450, 9051, 8988, 8829, 5742, 5432, 3975, 2806, 2199],
+      backgroundColor: ['#ef4444','#ef4444','#ef4444','#ef4444','#ef4444','#f87171','#f87171','#fbbf24','#fbbf24','#fbbf24'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>

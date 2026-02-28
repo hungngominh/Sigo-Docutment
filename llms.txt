@@ -1,0 +1,190 @@
+# AllianceMiddleman (Sigo API)
+
+> Self-drive car rental platform backend for Vietnam market.
+> Connects vehicle Owners with Renters through a managed marketplace.
+
+## System Identity
+
+- Name: AllianceMiddleman (commercial: Sigo API)
+- URL: https://api.sigo.vn
+- Tech: ASP.NET Core 5.0, EF Core 5.0, SQL Server + PostgreSQL, Redis, Kafka, SignalR, Docker
+- Language: C#, Vietnamese UI strings
+- Deploy: Docker multi-stage, Jenkins CI/CD
+
+## Architecture (4-Layer)
+
+```
+[1] AllianceMiddlemanWebAPI        — Controllers, JWT Auth, SignalR Hub, Compression
+[2] AllianceMiddlemanWebAPI.Service — Business Logic, Validation, 29+ Background Engines
+[3] AllianceMiddlemanWebAPI.Core    — EF Core, DbContext, 17 Stored Procedures
+[4] AllianceMiddlemanWebAPI.DataShared — Shared DTOs between layers
+    Modules: Ezy.Module.EWallet, Identity, CMS, DynamicReport, TrafficTicket, Hotline
+```
+
+## Key Conventions
+
+| Pattern | Details |
+|---------|---------|
+| Response wrapper | `EzyResultObject<T>` — Status: 1=OK, 0=Error, -1=ServerError, -2=Unauthorized |
+| Paginated list | `EzyDataSourceResult<T>` — Data[] + TotalCount |
+| Entity base | `IEFBaseEntity` — Id (long), IsDeleted, Log_CreatedDate/By, Log_UpdatedDate/By |
+| Service factory | `CreateServiceInstance<T>()` — NOT standard DI, factory pattern |
+| Cache system | `CachedDataManagement` — 70+ config tables cached in-memory |
+| Background jobs | Custom `Ezy.Module.Engine.dll` framework, NOT Hangfire |
+| ID format | `long` in DB, `string` in API models (auto-converted) |
+| Timezone | DB stores UTC; client sends `UI_TimezoneOffset=-420` (VN=UTC+7) |
+
+## Order Status Machine (9 statuses)
+
+```
+NEW → OWNER2CONFIRM → CUS2DEPOSIT → WAITING2CONFIRMDEPOSIT → WAITING2DEPARTURE → INTHETRIP → DONE
+         ↓                ↓                   ↓                      ↓
+    SYSTEMCANCEL     CUSCANCEL           CUSCANCEL              CUSCANCEL
+    OWNERCANCEL      OWNERCANCEL         OWNERCANCEL            OWNERCANCEL
+    CUSCANCEL        SYSTEMCANCEL
+```
+
+Cancelable: {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE}
+Terminal: {DONE, CUSCANCEL, OWNERCANCEL, SYSTEMCANCEL}
+Auto-complete: INTHETRIP → DONE after ToDate + 60 minutes
+
+## Pricing Pipeline (condensed)
+
+```
+1. GetRentalDaySegments()      → Split rental into Early/FullDay/Late segments
+2. GetOriginalPrice()          → Sum segment prices (DatePrice > WeekdayPrice > BasePrice)
+3. GetPriceByDay()             → Apply multiday discount, voucher
+4. TotalPrice = SubTotal + InsuranceFee + DeliveryFee - DiscountMoney
+5. DepositAmount = TotalPrice × 30% (or fixed amount)
+6. PlanProfitAmount = SubTotal × CompletionFee% + ServiceFee - DiscountMoney
+7. OwnerRemainAmount = DepositAmount - PlanProfitAmount - InsuranceFee - WithholdingTax
+```
+
+## Business Rules Quick Reference
+
+| Rule | Value | Source |
+|------|-------|--------|
+| Default deposit | 30% of TotalPrice | `RentalServiceCategorySettingJsonModel.DepositPercent` |
+| Cancel full refund window | 15 minutes after deposit | `CancelOrderSetting.FullRefundWithinMinutes` |
+| Cancel no-refund window | 7 days before rental | `CancelOrderSetting.NoRefundGreaterThanDays` |
+| Cancel penalty | 30% of deposit | `PenaltyDepositPercent` |
+| Commission cascade | ServiceItem → Owner → Category → System default | `CompletionFeePercentage` |
+| Owner confirm timeout | 3 hours (business hours) | `HourOwner2Confirm` |
+| Renter deposit timeout | 3 hours (business hours) | `HourCustomer2Deposit` |
+| Business hours | 7:00 - 21:00 VN time | `RentalServiceCategorySettingJsonModel` |
+| Auto-complete | 60 min after ToDate | `AutoCompleteOrder_AfterMinutes` |
+| Early/Late hour fee | hours × rate × 1000 VND | `EarlyHourDeliveryFee`, `LateHourReturnFee` |
+| ≥12h early/late | Counted as full day | `NumOfHourToBeOneDay = 12` |
+| Min withdrawal | 2,000 VND | MB Bank integration |
+| Daily wallet limit | 60,000,000 VND | `ConfigWalletType.DailyLimit` |
+| Search radius | 30km default | `MaxDistance` |
+| Insurance check | CoverageStartDate ≤ rental ≤ CoverageEndDate | `Vehicle_InsuranceInformation` |
+
+## Configuration Cascade
+
+```
+SystemConfig (global defaults)
+  → RentalServiceCategorySettingJsonModel (per category)
+    → Vehicle_RentalSetting (per vehicle)
+      → ServiceItem-level overrides (per rental item)
+```
+
+## Documentation Map
+
+### 01_ARCHITECTURE/ — System Design
+| File | Purpose |
+|------|---------|
+| overview.md | System description, 4-layer architecture, tech stack, middleware pipeline |
+| project-structure.md | Solution structure, DI configuration, startup pipeline |
+| base-service-pattern.md | CRUD framework, EzyResultObject, pagination, creating new services |
+| database-design.md | Schema, entities, EF Core mappings, indexes |
+| stored-procedures.md | 17 SPs: parameters, return types, SQL logic, callers |
+| helper-algorithms.md | 6 helper classes: pricing engine, search pipeline, delivery fee, FCM, wallet |
+| background-engines.md | 29 engines + 9 batch jobs + 2 hosted services |
+| notification-system.md | FCM, SignalR hub, notification templates, scheduling |
+| file-upload.md | Google Drive, image compression, SFTP, static files |
+| security-middleware.md | JWT, CORS, authorization, error handling, request logging, 2FA |
+| validation-error-catalog.md | Validation rules, error messages, discount logic, timezone patterns |
+| deployment.md | Docker, Jenkins, environments |
+
+### 02_MODULES/ — Business Modules
+| File | Purpose |
+|------|---------|
+| core-appsystem.md | Account, staff, device system |
+| core-user.md | User management, verification |
+| core-vehicle.md | Vehicle entities, insurance |
+| core-order.md | Order lifecycle, payment |
+| core-rental-service.md | Rental service, service items |
+| core-notification.md | Notification module |
+| ewallet.md | E-wallet, transactions, wallet integrity |
+| identity.md | User identity management |
+| integrations.md | Third-party integration overview |
+| cms.md | Content management |
+| dynamic-report.md | Dynamic reporting |
+| traffic-ticket.md | Traffic violation tracking |
+| hotline.md | OMI Call integration |
+
+### 03_API/ — API Reference
+| File | Purpose |
+|------|---------|
+| auth.md | Account, OTP, Login, Register |
+| rental-service.md | RentalService, SearchingRentalService |
+| rental-service.test-scenarios.md | 75 test scenarios for AI test generation |
+| test-coverage-matrix.md | QC cross-reference: rule → scenario → endpoint |
+| cancel-flow.test-scenarios.md | 36 cancel flow test scenarios |
+| ewallet-order-lifecycle.test-scenarios.md | 34 wallet/lifecycle test scenarios |
+| order.md | Order, Payment, Confirm, Cancel |
+| user.md | User, Profile, Device |
+| notification.md | Notification, Hub, Support |
+| vehicle.md | Vehicle, Insurance, Setting |
+| service-item.md | ServiceItem, DatePrice, Schedule |
+| quick-order.md | QuickOrderRequest, Suggestion |
+| categories.md | All Config* controllers, actual data |
+| reports.md | Financial reports |
+| ewallet.md | EWallet — deposit/withdraw/transfer |
+| traffic-ticket.md | Traffic violation lookup |
+| hotline.md | Hotline — OMI Call integration |
+| cms.md | CMS — Blog, News, Topic |
+| dynamic-report.md | Dynamic reporting API |
+| integrations/mbbank.md | MB Bank — OAuth2, RSA, TransferFund |
+| integrations/misa-invoice.md | MISA Invoice |
+| integrations/mioto.md | Mioto — vehicle/price/trip sync |
+| integrations/vietqr.md | VietQR — account lookup, KYC |
+
+### 04_BUSINESS_FLOWS/ — Business Workflows
+| File | Purpose |
+|------|---------|
+| booking-flow.md | Search → book → pay → pickup → return → rate |
+| cancel-flow.md | Renter/owner/system cancel with refund formulas |
+| pricing-calculation.md | 14 detailed pricing formulas with examples |
+| order-status-machine.md | 9 order statuses with state machine diagram |
+| owner-onboarding.md | Vehicle registration and approval workflow |
+| ewallet-withdraw.md | Withdrawal flow and transaction status |
+
+### 05_PERFORMANCE/ — Performance Analysis
+| File | Purpose |
+|------|---------|
+| top10-api-report.md | Top 10 most-called APIs detailed analysis |
+| db-optimization-notes.md | Database optimization notes |
+
+### 06_OPERATIONS/ — DevOps & Operations
+| File | Purpose |
+|------|---------|
+| setup-dev.md | Local development setup |
+| config-keys.md | appsettings, SystemConfigKeys, CachedDataManagement |
+| runbook.md | Common incident handling |
+
+### 07_ADR/ — Architecture Decision Records
+15 ADRs covering: framework choice, layered architecture, databases, JWT, EF Core, Redis, Kafka, SignalR, background engines, modular design, Docker, Jenkins, API versioning, response wrapper, MB Bank integration.
+
+### Supporting Files
+| File | Purpose |
+|------|---------|
+| SYSTEM_MAP.md | Code generation companion — recipes, method contracts, entity mapping |
+| README.md | Main index with audience-specific reading guides |
+
+## Recommended Reading Order
+
+**For AI code generation:** llms.txt → SYSTEM_MAP.md → base-service-pattern.md → relevant module doc
+**For understanding system:** llms.txt → overview.md → order-status-machine.md → pricing-calculation.md
+**For QC/testing:** test-coverage-matrix.md → business flow docs (QC sections) → test-scenarios files
