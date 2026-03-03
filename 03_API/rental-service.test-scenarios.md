@@ -81,9 +81,29 @@
 | B-14 | Thuê xe của chính mình | Renter ID = Owner ID | Status: 0, msg chứa "không thể thuê dịch vụ cho thuê của chính bạn" | P0 | BR-BOOK-010 |
 | B-15 | Giao xe quá xa | Khoảng cách > max | Status: 0, msg chứa "vượt quá" | P1 | BR-BOOK-011 |
 | B-16 | Thiếu địa chỉ giao xe | DeliveryAddress trống | Status: 0, msg chứa "Điểm giao nhận" | P1 | — |
-| B-17 | Bảo hiểm hết hạn | Xe có insurance expired | Status: 0, msg chứa "bảo hiểm" | P2 | — |
+| B-17 | Bảo hiểm hết hạn | Xe có insurance expired | Status: 0, msg chứa "bảo hiểm" | P1 | — |
 | B-18 | Voucher hợp lệ | VoucherCode = valid | TotalPrice < giá gốc | P1 | — |
 | B-19 | Voucher hết lượt dùng | VoucherCode = exhausted | Booking thành công nhưng không giảm giá | P2 | — |
+| B-20 | Booking mà không gọi UpdateBookingInfo trước | Gọi POST Booking trực tiếp, skip UpdateBookingInfo | Status: 0, msg chứa "thông tin đặt xe" hoặc thiếu dữ liệu pricing → booking fail do pricing fields = null/0. **Lưu ý**: UpdateBookingInfo set session data (giá, delivery); skip = thiếu data → API reject hoặc tạo đơn lỗi | P1 | BR-BOOK-012 |
+
+---
+
+## 5b. SearchVouchers (Tìm voucher)
+
+| # | Scenario | Input | Expected | Priority | Rule |
+|---|----------|-------|----------|----------|------|
+| SV-01 | Happy path — tìm voucher hợp lệ | RentalServiceItemId hợp lệ, FromDate/ToDate hợp lệ | Status: 1, Data chứa danh sách voucher áp dụng được, mỗi voucher có DiscountPercent/DiscountAmount | P1 | — |
+| SV-02 | Voucher hết hạn bị loại | Có voucher với ApplyTo < now | Voucher hết hạn không xuất hiện trong kết quả | P1 | — |
+| SV-03 | Voucher hết lượt dùng bị loại | Voucher có UsageCount >= MaxUsage | Voucher hết lượt không xuất hiện trong kết quả | P1 | — |
+| SV-04 | Voucher không áp dụng được cho xe | Voucher chỉ áp dụng cho category khác | Voucher không xuất hiện trong kết quả hoặc IsApplicable = false | P2 | — |
+
+---
+
+## 5c. Concurrent Booking (Race Condition)
+
+| # | Scenario | Input | Expected | Priority | Rule |
+|---|----------|-------|----------|----------|------|
+| CONC-01 | 2 renter đặt cùng xe cùng ngày cùng lúc | Renter A + Renter B gọi Booking đồng thời, cùng xe, cùng ngày | Chỉ 1 request thành công (Status: 1), request còn lại Status: 0 msg chứa "đã bận" — không tạo 2 booking | P1 | BR-BOOK-005 |
 
 ---
 
@@ -115,6 +135,8 @@
 | RC-08 | Huỷ sát ngày | Huỷ trong NoRefundGreaterThanDays | Không hoàn cọc | P0 | BR-CANCEL-006 |
 | RC-09 | Đơn đang INTHETRIP | Status = INTHETRIP | Status: 0, msg chứa "bị thay đổi" | P1 | — |
 | RC-10 | Đơn đã DONE | Status = DONE | Status: 0 | P1 | — |
+| RC-11 | Huỷ sau 15 phút nhưng >7 ngày trước chuyến → hoàn 70% | Status = WAITING2DEPARTURE, đã cọc, thời gian > 15 phút, FromDate - now > 7 ngày | Status: 1, order → CUSCANCEL, RefundAmount = DepositAmount × 70% | P0 | BR-CANCEL-005/006 |
+| RC-12 | Renter huỷ khi status = WAITING2CONFIRMDEPOSIT | Status = WAITING2CONFIRMDEPOSIT, cọc đang chờ xác nhận | Status: 1, order → CUSCANCEL, cọc pending được huỷ | P0 | BR-CANCEL-001 |
 
 ### Owner Cancel
 
@@ -182,7 +204,7 @@
 
 ---
 
-*Tổng cộng: **75 test scenarios** covering happy paths, negative cases, edge cases, và business rule validations.*
+*Tổng cộng: **85 test scenarios** covering happy paths, negative cases, edge cases, concurrent booking, voucher search, và business rule validations.*
 
 ---
 
@@ -298,3 +320,243 @@ Feature: System Auto-Complete Order
 | OP-01 → OP-04 | BR-BOOK-014 | [booking-flow.md](../04_BUSINESS_FLOWS/booking-flow.md) |
 | OB-01 → OB-06 | BR-BOOK-015 | [booking-flow.md](../04_BUSINESS_FLOWS/booking-flow.md) |
 | OR-01 → OR-03 | BR-BOOK-016 | [booking-flow.md](../04_BUSINESS_FLOWS/booking-flow.md) |
+
+---
+
+## Appendix B: Request/Response JSON Examples
+
+> Cho AI agents sinh test code. Mỗi endpoint gồm full request body + expected response.
+
+### POST /api/v1/SearchingRentalService/List — Search Vehicles
+
+**Request:**
+```json
+{
+  "FromDate": "2026-03-10T08:00:00",
+  "ToDate": "2026-03-12T20:00:00",
+  "Address": "Hà Nội",
+  "Latitude": 21.028511,
+  "Longitude": 105.804817,
+  "PageIndex": 1,
+  "PageSize": 20,
+  "VehicleMakeIds": [],
+  "VehicleNoOfSeatIds": [],
+  "MinRentalPrice": null,
+  "MaxRentalPrice": null,
+  "IsElectricEngine": null,
+  "IsHaveInsurance": null,
+  "OrderBy": []
+}
+```
+
+**Response (success):**
+```json
+{
+  "Status": 1,
+  "Message": "",
+  "Data": {
+    "Data": [
+      {
+        "RentalServiceItemId": "123456",
+        "Slug": "toyota-vios-ha-noi",
+        "VehicleMakeName": "Toyota",
+        "VehicleModelName": "Vios",
+        "NoOfSeat": 4,
+        "RentalPrice": 650000,
+        "TotalPrice": 1950000,
+        "RentalDayCount": 3,
+        "Address": "Hai Bà Trưng, Hà Nội",
+        "Latitude": 21.028,
+        "Longitude": 105.805,
+        "ImageUrl": "https://...",
+        "IsHaveInsurance": true,
+        "Rating": 4.8,
+        "TripCount": 25
+      }
+    ],
+    "TotalCount": 42
+  }
+}
+```
+
+### POST /api/v1/RentalService/Booking — Create Booking
+
+**Request:**
+```json
+{
+  "RentalServiceItemId": "123456",
+  "FromDate": "2026-03-10T08:00:00",
+  "ToDate": "2026-03-12T20:00:00",
+  "DeliveryAddress": "12 Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
+  "DeliveryLatitude": 21.025,
+  "DeliveryLongitude": 105.855,
+  "VoucherCode": "",
+  "UI_TimezoneOffset": -420,
+  "Note": ""
+}
+```
+
+**Headers:**
+```
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+```
+
+**Response (success — B-01):**
+```json
+{
+  "Status": 1,
+  "Message": "",
+  "Data": {
+    "OrderNumber": "ORD-240310-001",
+    "OrderId": "789012",
+    "StatusCode": "OWNER2CONFIRM",
+    "TotalPrice": 1950000,
+    "DepositAmount": 585000,
+    "Owner2ConfirmEndTime": "2026-03-10T14:00:00Z"
+  }
+}
+```
+
+**Response (error — B-02 thiếu FromDate):**
+```json
+{
+  "Status": 0,
+  "Message": "Vui lòng chọn Ngày đi và Ngày về",
+  "Data": null
+}
+```
+
+### POST /api/v1/Order_ListView_RentCar/RenterCancel — Cancel Order
+
+**Request:**
+```json
+{
+  "OrderNumber": "ORD-240310-001",
+  "CancelReasonId": "55",
+  "CancelReasonCode": "",
+  "CancelReasonDetail": ""
+}
+```
+
+**Response (success — RC-07 full refund):**
+```json
+{
+  "Status": 1,
+  "Message": "Huỷ đơn thành công",
+  "Data": {
+    "OrderNumber": "ORD-240310-001",
+    "StatusCode": "CUSCANCEL",
+    "RefundAmount": 585000,
+    "RefundPercent": 100
+  }
+}
+```
+
+### POST /api/v1/RentalService/OrderConfirm — Owner Confirm
+
+**Request:**
+```json
+{
+  "OrderNumber": "ORD-240310-001"
+}
+```
+
+**Response (success — OC-01):**
+```json
+{
+  "Status": 1,
+  "Message": "",
+  "Data": {
+    "OrderNumber": "ORD-240310-001",
+    "StatusCode": "CUS2DEPOSIT",
+    "Customer2DepositEndTime": "2026-03-10T17:00:00Z"
+  }
+}
+```
+
+### POST /api/v1/RentalService/OrderPay — Renter Pay Deposit
+
+**Request:**
+```json
+{
+  "OrderNumber": "ORD-240310-001",
+  "Amount": 585000
+}
+```
+
+**Response (success — OP-01):**
+```json
+{
+  "Status": 1,
+  "Message": "",
+  "Data": {
+    "OrderNumber": "ORD-240310-001",
+    "StatusCode": "WAITING2DEPARTURE",
+    "DepositDoneAt": "2026-03-10T15:30:00Z"
+  }
+}
+```
+
+---
+
+## Appendix C: Test Infrastructure Guide
+
+> Hướng dẫn setup cho AI agents hoặc QC khi sinh/chạy test.
+
+### Authentication
+
+```
+1. Đăng nhập: POST /api/v1/User/Login { "Phone": "0901234567", "Password": "..." }
+   → Response.Data.Token = JWT Bearer token
+2. Gắn header: Authorization: Bearer {token}
+3. Test account "test_no_token": gửi request KHÔNG có Authorization header
+```
+
+### Test Data Seeding
+
+```
+Test data được liệt kê trong test-coverage-matrix.md Section 4.
+Các accounts test: test_renter_01, test_owner_01, etc.
+Các xe test: vehicle_active_01, vehicle_suspended, etc.
+
+Cách seed:
+- Option A: Dùng SQL insert trực tiếp vào DB test (preferred cho integration test)
+- Option B: Gọi API tạo data tuần tự (Login → InsertNewRentalService → Submit2Review → admin approve)
+- Option C: Restore DB snapshot có sẵn test data
+```
+
+### Concurrent Test (CONC-01)
+
+```csharp
+// C# example cho race condition test:
+var tasks = new[] {
+    Task.Run(() => httpClient_RenterA.PostAsync("/api/v1/RentalService/Booking", bodyA)),
+    Task.Run(() => httpClient_RenterB.PostAsync("/api/v1/RentalService/Booking", bodyB))
+};
+var results = await Task.WhenAll(tasks);
+// Assert: exactly 1 success (Status=1), 1 failure (Status=0, "đã bận")
+```
+
+### Assertion Patterns
+
+```
+- "msg chứa X"  → response.Message.Contains("X")     // dùng Contains()
+- "msg = X"      → response.Message == "X"              // dùng Equals()
+- "Status: 1"    → response.Status == 1                 // application-level, HTTP vẫn 200
+- "Status: 0"    → response.Status == 0                 // application-level error, HTTP vẫn 200
+- B-13 "no token" → HTTP 401 hoặc Status 0 tuỳ middleware config
+```
+
+### Scenario ID Convention
+
+```
+File                                    | ID Prefix | BDD Alias
+rental-service.test-scenarios.md        | OB-*      | OBG-* (trong bdd/order-lifecycle.bdd.md)
+cancel-flow.test-scenarios.md           | RCC-*     | RCC-* (giống nhau)
+ewallet-order-lifecycle.test-scenarios  | OEN-*     | OEN-* (giống nhau)
+owner-vehicle-management.test-scenarios | OVM-*     | — (chưa có BDD)
+
+Quy tắc: Khi cross-reference, luôn dùng ID từ file .test-scenarios.md gốc.
+BDD files có thể dùng alias prefix khác → mapping ở bảng trên.
+```

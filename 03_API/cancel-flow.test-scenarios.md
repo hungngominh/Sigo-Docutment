@@ -34,6 +34,8 @@
 | OCC-06 | Owner huỷ → auto tạo QuickOrder cho renter | Config QuickOrder_RentCar_AutoCreate = true | CancelReasonId hợp lệ, user = owner | QuickOrder mới được tạo tự động cho renter với cùng thông tin thuê xe | P2 | BR-CANCEL-009 |
 | OCC-07 | Owner huỷ → IsOwnerFault và cancel ratio | Owner đã có lịch sử huỷ đơn | CancelReasonId hợp lệ, user = owner | IsOwnerFault = true, User_Calculating.CancelRatio được cập nhật tăng | P1 | BR-CANCEL-013 |
 | OCC-08 | User không phải owner cố huỷ đơn với quyền owner | Order thuộc về owner A, user = owner B (khác người) | CancelReasonId hợp lệ, user ≠ owner của đơn | Status: 0, msg chứa "không có quyền" | P0 | — |
+| OCC-09 | Owner huỷ thiếu CancelReasonId | Order status = OWNER2CONFIRM | CancelReasonId = null, user = owner | Status: 0, msg chứa "chọn lý do huỷ" | P0 | BR-CANCEL-003 |
+| OCC-10 | Owner chọn "another_reason" nhưng không nhập chi tiết | Order status = OWNER2CONFIRM | CancelReasonCode = "another_reason", CancelReasonDetail = null/empty, user = owner | Status: 0, msg chứa "nhập lý do huỷ chi tiết" | P0 | BR-CANCEL-004 |
 
 ---
 
@@ -76,4 +78,4 @@
 
 ---
 
-*Tong cong: **36 test scenarios** covering renter cancel, owner cancel, system auto-cancel, refund calculation, va side effects cho Cancel Flow.*
+*Tong cong: **38 test scenarios** covering renter cancel, owner cancel, system auto-cancel, refund calculation, va side effects cho Cancel Flow.*

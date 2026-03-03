@@ -7,9 +7,17 @@
 
 ## Table of Contents
 - [Feature Implementation Recipes](#feature-implementation-recipes)
+  - [Recipe: Add New CRUD Endpoint](#recipe-add-new-crud-endpoint)
+  - [Recipe: Add New Background Engine](#recipe-add-new-background-engine)
+  - [Recipe: Add New Validation Rule](#recipe-add-new-validation-rule)
+  - [Recipe: Add New Notification Template](#recipe-add-new-notification-template)
+  - [Recipe: Add New Payment Integration](#recipe-add-new-payment-integration)
+  - [Recipe: Add New Stored Procedure](#recipe-add-new-stored-procedure)
+  - [Recipe: Add New Test Scenario](#recipe-add-new-test-scenario)
 - [Method Contract Reference](#method-contract-reference)
 - [Entity → Service → Controller → API Mapping](#entity--service--controller--api-mapping)
 - [Configuration Cascade](#configuration-cascade)
+- [AI Agent Decision Tree](#ai-agent-decision-tree)
 
 ---
 
@@ -259,66 +267,137 @@ public class sp_MyNewSP_Param : sp_BaseParam
 
 ---
 
+### Recipe: Add New Test Scenario
+
+> Khi cần thêm test scenario mới — follow workflow dưới để đảm bảo consistency.
+
+**Step 1 — Chọn file phù hợp:**
+```
+Booking/Search/Detail/Cancel/Review  → rental-service.test-scenarios.md
+Renter cancel/Owner cancel/System    → cancel-flow.test-scenarios.md
+EWallet/Begin/End/Financial           → ewallet-order-lifecycle.test-scenarios.md
+Vehicle management endpoints          → owner-vehicle-management.test-scenarios.md
+```
+
+**Step 2 — Thêm scenario vào bảng (format thống nhất):**
+```markdown
+| # | Scenario | Input/Precondition | Expected | Priority | Rule |
+|---|----------|-------------------|----------|----------|------|
+| {PREFIX}-{NUM} | {mô tả ngắn} | {input cụ thể} | Status: {0|1}, msg/data | P{0|1|2} | BR-{XXX}-{NNN} |
+```
+
+**Step 3 — Nếu P0, thêm BDD Gherkin** (trong `03_API/bdd/`):
+```gherkin
+Scenario: {ID} — {mô tả}
+  Given {precondition cụ thể với test data identifiers}
+  And {thêm context nếu cần}
+  When {action: gọi API endpoint cụ thể}
+  Then response StatusCode = {0|1}
+  And {assertion cụ thể: field = value}
+```
+
+**Step 4 — Cập nhật cross-references:**
+```
+1. test-coverage-matrix.md → Section 1: thêm scenario ID vào rule tương ứng
+2. test-coverage-matrix.md → Section 2: thêm scenario ID vào endpoint
+3. CHANGE_TRACKING.md → đánh dấu files đã sửa là ✅ VERIFIED + update date
+4. Nếu gap mới → thêm vào Section 3, đánh dấu RESOLVED
+```
+
+**ID Convention:**
+```
+B-{num}    = Booking scenarios
+S-{num}    = Search scenarios
+D-{num}    = Detail scenarios
+C-{num}    = CheckBefore scenarios
+U-{num}    = UpdateBookingInfo scenarios
+RC-{num}   = Renter Cancel
+OCA-{num}  = Owner Cancel
+AC-{num}   = Auto Cancel
+OB-{num}   = Order Begin (alias: OBG-{num} in BDD)
+OE-{num}   = Order End
+OR-{num}   = Order Review
+OP-{num}   = Order Pay
+OVM-{num}  = Owner Vehicle Management
+SV-{num}   = Search Vouchers
+CONC-{num} = Concurrency tests
+BATCH-{num}= Background job tests
+```
+
+---
+
 ## Method Contract Reference
 
 ### RentCarHelper (8 methods)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| GetRentalHourStartEnd | `static (double, double) GetRentalHourStartEnd(Vehicle_RentalSetting setting, DateTime fromDate)` | Vehicle rental setting + pickup date | (rentalHourStart, rentalHourEnd) tuple | helper-algorithms.md §1.2 |
-| GetRentalDaySegments | `static RentCarSegmentModel[] GetRentalDaySegments(RentCarFormulaInputModel model)` | Formula input (service info + rent dates) | Array of Early/FullDay/Late segments | helper-algorithms.md §1.3 |
-| GetEarlyHourDeliveryFeeV2 | `static async Task<RentCarSegment_PriceModel> GetEarlyHourDeliveryFeeV2(RentCarFormulaInputModel model, DateTime fromDate, DateTime toDate)` | Formula input + segment dates | Segment price with IsFullDay/IsHalfDay flags | helper-algorithms.md §1.4 |
-| GetLateHourReturnFeeV2 | `static async Task<RentCarSegment_PriceModel> GetLateHourReturnFeeV2(RentCarFormulaInputModel model, DateTime fromDate, DateTime toDate)` | Formula input + segment dates | Segment price with IsFullDay/IsHalfDay flags | helper-algorithms.md §1.5 |
-| GetOriginalPrice | `static async Task<RentCarOriginalPriceModel> GetOriginalPrice(RentCarFormulaInputModel model)` | Formula input | TotalOriginalPrice, RentalDayCount, Segments[] | helper-algorithms.md §1.6 |
-| GetPriceByDay | `static async Task<RentCarPriceByDayModel> GetPriceByDay(RentCarFormulaInputModel model)` | Formula input | SubTotal, PriceByDay, PromotionMoney | helper-algorithms.md §1.7 |
-| BuildPriceModel | `static void BuildPriceModel(Dict<int, WeekdayPrice> dictWeekday, Dict<string, decimal?> dictDate, RentCarSegment_PriceModel m, DateTime? date, decimal days)` | Price dictionaries + segment + date | Mutates segment with price info | helper-algorithms.md §1.8 |
-| CalcRerturnDepositAmount | `(method in RentCarHelper)` | Order + cancel settings | RefundAmount_Renter, RefundAmount_Owner, RefundAmount_Service | pricing-calculation.md §14 |
+> Pricing engine core — tính giá thuê xe từ ngày/segment/discount.
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| GetRentalHourStartEnd | Lấy giờ bắt đầu/kết thúc thuê từ config xe (ví dụ: 8:00-20:00) | `static (double, double) GetRentalHourStartEnd(Vehicle_RentalSetting setting, DateTime fromDate)` | Vehicle rental setting + pickup date | (rentalHourStart, rentalHourEnd) tuple | helper-algorithms.md §1.2 |
+| GetRentalDaySegments | Chia khoảng thuê thành Early/FullDay/Late segments (≥12h = 1 ngày) | `static RentCarSegmentModel[] GetRentalDaySegments(RentCarFormulaInputModel model)` | Formula input (service info + rent dates) | Array of Early/FullDay/Late segments | helper-algorithms.md §1.3 |
+| GetEarlyHourDeliveryFeeV2 | Tính phí giao xe sớm (trước giờ thuê chuẩn) | `static async Task<RentCarSegment_PriceModel> GetEarlyHourDeliveryFeeV2(...)` | Formula input + segment dates | Segment price with IsFullDay/IsHalfDay flags | helper-algorithms.md §1.4 |
+| GetLateHourReturnFeeV2 | Tính phí trả xe muộn (sau giờ thuê chuẩn) | `static async Task<RentCarSegment_PriceModel> GetLateHourReturnFeeV2(...)` | Formula input + segment dates | Segment price with IsFullDay/IsHalfDay flags | helper-algorithms.md §1.5 |
+| GetOriginalPrice | Tổng giá gốc = sum(segment prices), ưu tiên DatePrice > WeekdayPrice > BasePrice | `static async Task<RentCarOriginalPriceModel> GetOriginalPrice(...)` | Formula input | TotalOriginalPrice, RentalDayCount, Segments[] | helper-algorithms.md §1.6 |
+| GetPriceByDay | Áp dụng giảm giá nhiều ngày + voucher lên giá gốc → SubTotal cuối | `static async Task<RentCarPriceByDayModel> GetPriceByDay(...)` | Formula input | SubTotal, PriceByDay, PromotionMoney | helper-algorithms.md §1.7 |
+| BuildPriceModel | Ghép giá từ dict date/weekday vào segment cụ thể | `static void BuildPriceModel(...)` | Price dictionaries + segment + date | Mutates segment with price info | helper-algorithms.md §1.8 |
+| CalcRerturnDepositAmount | Tính hoàn cọc khi huỷ: 100% (≤15p), 70% (>7d), 0% (≤7d), owner huỷ = 100% | `(method in RentCarHelper)` | Order + cancel settings | RefundAmount_Renter, RefundAmount_Owner, RefundAmount_Service | pricing-calculation.md §14 |
 
 ### SearchingVehicleHelper (pipeline)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| GetRentalServices_SelfdriveCar_Version2Async | `static async Task<(RentalService_SelfdriveCarRental[] data, Dict<string, DistanceItemResultModel> dictDistance, string error)>` | Search params + category settings | Filtered vehicles + distances | helper-algorithms.md §2.1 |
-| GetDictHostAddressAsync | `(internal)` | Lat/lng or province/district | Dict<long?, HostAddress> | helper-algorithms.md §2 Phase 1 |
-| SearchRentalService_Filter | `(internal)` | 14 filter types | Filtered IQueryable | helper-algorithms.md §2 Phase 3 |
-| CheckRentalServiceNotBusy | `(internal)` | Date range | Available vehicles only | helper-algorithms.md §2 Phase 4 |
+> Search engine — filter và rank xe theo location/ngày/giá.
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| GetRentalServices_SelfdriveCar_Version2Async | Pipeline chính: location → filter → distance → sort → trả kết quả | `static async Task<(RentalService_SelfdriveCarRental[] data, Dict<string, DistanceItemResultModel> dictDistance, string error)>` | Search params + category settings | Filtered vehicles + distances | helper-algorithms.md §2.1 |
+| GetDictHostAddressAsync | Phase 1: Resolve lat/lng hoặc province/district → host address | `(internal)` | Lat/lng or province/district | Dict<long?, HostAddress> | helper-algorithms.md §2 Phase 1 |
+| SearchRentalService_Filter | Phase 3: Apply 14 filter types (giá, hãng, số chỗ, fuel, etc.) | `(internal)` | 14 filter types | Filtered IQueryable | helper-algorithms.md §2 Phase 3 |
+| CheckRentalServiceNotBusy | Phase 4: Loại xe đã được book/bận trong khoảng ngày | `(internal)` | Date range | Available vehicles only | helper-algorithms.md §2 Phase 4 |
 
 ### ConfigDeliveryFeeHelper (3 methods)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| CalculateDeliveryFee | `static async Task<RentalFeeResult> CalculateDeliveryFee(ConfigDeliveryFeeArrJsonModel[] configArr, decimal hours, DateTime fromDate, DateTime toDate, Vehicle_RentalSetting setting, RentCarServiceInfoModel serviceInfo, bool isEarlyDelivery)` | Config array + hours + setting | RentalFeeResult (Price, IsFullDay, IsHalfDay) | helper-algorithms.md §3.2 |
-| BuildByHourResult | `(internal)` | Hours + hourly rate | Price = hours × rate × 1000 | helper-algorithms.md §3.3 |
-| BuildByDayResult | `(internal)` | Day fraction + price lookup | Price from BuildPriceModel × fraction | helper-algorithms.md §3.4 |
+> Tính phí giao/trả xe dựa trên giờ và khoảng cách.
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| CalculateDeliveryFee | Tính phí giao/trả xe: by-hour (hours×rate×1000) hoặc by-day (fraction×daily price) | `static async Task<RentalFeeResult> CalculateDeliveryFee(...)` | Config array + hours + setting | RentalFeeResult (Price, IsFullDay, IsHalfDay) | helper-algorithms.md §3.2 |
+| BuildByHourResult | Tính phí theo giờ = hours × hourly rate × 1000 VND | `(internal)` | Hours + hourly rate | Price = hours × rate × 1000 | helper-algorithms.md §3.3 |
+| BuildByDayResult | Tính phí theo ngày = day fraction × giá ngày (lookup từ DatePrice/WeekdayPrice) | `(internal)` | Day fraction + price lookup | Price from BuildPriceModel × fraction | helper-algorithms.md §3.4 |
 
 ### RentalServiceHelper (5 methods)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| GetEndTime | `static DateTime GetEndTime(DateTime? now, int? businessHourStart, int? businessHourEnd, int? UI_TimezoneOffset, int? hour)` | Current time + business hours + timeout hours | Deadline DateTime (UTC) | helper-algorithms.md §4.1 |
-| BuildDictPriceByDate | `static Dict<string, decimal?> BuildDictPriceByDate(DateTime? fromDate, DateTime? toDate, ServiceItem_DateRentalPriceInfo[] priceByDates)` | Date range + price configs | Dict<"dd/MM/yyyy", price> | helper-algorithms.md §4.2 |
-| GetCompletionFee | `(method)` | Service item / owner / category | CompletionFeePercentage (priority cascade) | helper-algorithms.md §4.4 |
-| GetPlanProfitAndOwnerRemain | `(method)` | SubTotal, fees, deposit | PlanProfitAmount, OwnerRemainAmount | helper-algorithms.md §4.4 |
-| GetSettingJson | `(method)` | Category ID | RentalServiceCategorySettingJsonModel | helper-algorithms.md §4.3 |
+> Utility cho rental business logic — deadline, giá theo ngày, commission.
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| GetEndTime | Tính deadline (UTC) dựa trên business hours 7:00-21:00, skip giờ ngoài | `static DateTime GetEndTime(...)` | Current time + business hours + timeout hours | Deadline DateTime (UTC) | helper-algorithms.md §4.1 |
+| BuildDictPriceByDate | Build lookup dict giá theo ngày từ ServiceItem_DateRentalPrice | `static Dict<string, decimal?> BuildDictPriceByDate(...)` | Date range + price configs | Dict<"dd/MM/yyyy", price> | helper-algorithms.md §4.2 |
+| GetCompletionFee | Lấy % commission theo cascade: ServiceItem → Owner → Category → System default | `(method)` | Service item / owner / category | CompletionFeePercentage (priority cascade) | helper-algorithms.md §4.4 |
+| GetPlanProfitAndOwnerRemain | Tính tiền platform giữ + tiền owner nhận từ deposit | `(method)` | SubTotal, fees, deposit | PlanProfitAmount, OwnerRemainAmount | helper-algorithms.md §4.4 |
+| GetSettingJson | Lấy config JSON của category xe (deposit%, cancel policy, business hours) | `(method)` | Category ID | RentalServiceCategorySettingJsonModel | helper-algorithms.md §4.3 |
 
 ### WalletHelper (6 methods)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| GetUserWalletPayment | `static Wallet GetUserWalletPayment(Guid? userGUID)` | User GUID | Wallet entity (PAYMENT type) | helper-algorithms.md §6.2 |
-| GetUserWallets | `static Dict<Guid?, Wallet> GetUserWallets(Guid?[] userGUIDs, string walletTypeCode)` | User GUIDs + wallet type | Dict of wallets (auto-creates missing) | helper-algorithms.md §6.3 |
-| FundingWallet | `static string FundingWallet(WalletFundingModel[] models, string walletTypeCode)` | Funding models | Error string (empty = success) | helper-algorithms.md §6.5 |
-| TransferWallet | `static string TransferWallet(WalletTransferModel[] models)` | Transfer models | Error string | helper-algorithms.md §6.6 |
-| CreateWallet | `static WalletModel CreateWallet(Guid? userGUID, long? walletId, out string sMessage)` | User GUID | WalletModel + error | helper-algorithms.md §6.7 |
-| GetUserWalletSetting | `(method)` | — | TopUpBankCode, WithdrawFee, MinMoneyCanWithdraw | helper-algorithms.md §6.4 |
+> Quản lý ví điện tử — lấy/tạo ví, nạp/chuyển tiền.
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| GetUserWalletPayment | Lấy ví PAYMENT của user (ví chính để cọc/thanh toán) | `static Wallet GetUserWalletPayment(Guid? userGUID)` | User GUID | Wallet entity (PAYMENT type) | helper-algorithms.md §6.2 |
+| GetUserWallets | Lấy nhiều ví theo type, tự tạo nếu chưa có | `static Dict<Guid?, Wallet> GetUserWallets(Guid?[] userGUIDs, string walletTypeCode)` | User GUIDs + wallet type | Dict of wallets (auto-creates missing) | helper-algorithms.md §6.3 |
+| FundingWallet | Nạp tiền vào ví (cọc, hoàn tiền, etc.) | `static string FundingWallet(WalletFundingModel[] models, string walletTypeCode)` | Funding models | Error string (empty = success) | helper-algorithms.md §6.5 |
+| TransferWallet | Chuyển tiền giữa các ví (renter→platform, platform→owner) | `static string TransferWallet(WalletTransferModel[] models)` | Transfer models | Error string | helper-algorithms.md §6.6 |
+| CreateWallet | Tạo ví mới cho user nếu chưa có | `static WalletModel CreateWallet(Guid? userGUID, long? walletId, out string sMessage)` | User GUID | WalletModel + error | helper-algorithms.md §6.7 |
+| GetUserWalletSetting | Lấy config ví: bank code nạp tiền, phí rút, số tiền tối thiểu rút | `(method)` | — | TopUpBankCode, WithdrawFee, MinMoneyCanWithdraw | helper-algorithms.md §6.4 |
 
 ### PushNotificationHelper (3 methods)
 
-| Method | Signature | Input | Output | Doc File |
-|--------|-----------|-------|--------|----------|
-| PushNotify_SQLSP | `static async Task PushNotify_SQLSP()` | — (reads from SP) | Sends FCM notifications, writes history | helper-algorithms.md §5.2 |
-| GetPushNotifyItem | `(internal)` | Notification data | PushNotifyItem with TTL check | helper-algorithms.md §5.3 |
-| SendPushNotification_REST_HTTP_V1Async | `(internal)` | FCM payload | HTTP response from FCM | helper-algorithms.md §5.5 |
+> Gửi push notification qua FCM (Firebase Cloud Messaging).
+
+| Method | Business Logic | Signature | Input | Output | Doc File |
+|--------|---------------|-----------|-------|--------|----------|
+| PushNotify_SQLSP | Đọc notification queue từ SP → gửi FCM → ghi history | `static async Task PushNotify_SQLSP()` | — (reads from SP) | Sends FCM notifications, writes history | helper-algorithms.md §5.2 |
+| GetPushNotifyItem | Build FCM payload từ notification data, check TTL expiry | `(internal)` | Notification data | PushNotifyItem with TTL check | helper-algorithms.md §5.3 |
+| SendPushNotification_REST_HTTP_V1Async | Gửi HTTP request đến FCM v1 API | `(internal)` | FCM payload | HTTP response from FCM | helper-algorithms.md §5.5 |
 
 ---
 
@@ -404,6 +483,40 @@ Level 4: ServiceItem-level (per rental listing)
 3. Check RentalServiceCategorySettingJsonModel.CompletionFeePercentage → if not null, use it
 4. Use ConfigCompletionFee system default
 ```
+
+---
+
+## AI Agent Decision Tree
+
+> Khi AI agent cần tạo test, sửa code, hoặc review — navigate theo cây quyết định sau.
+
+### "Tôi cần tạo test cho feature X"
+1. Kiểm tra [test-coverage-matrix.md](./03_API/test-coverage-matrix.md) → xem X đã có scenarios chưa
+2. Nếu có → đọc file `.test-scenarios.md` tương ứng → sinh test case
+3. Nếu chưa → đọc business flow docs (`04_BUSINESS_FLOWS/`) → tạo scenarios theo **Recipe: Add New Test Scenario** ở trên
+4. Cross-check với [bdd/*.bdd.md](./03_API/bdd/) để có Given/When/Then detail (**chỉ P0 có BDD format**)
+5. Dùng JSON examples trong [Appendix B](./03_API/rental-service.test-scenarios.md#appendix-b-requestresponse-json-examples) cho request/response structure
+6. Cập nhật test-coverage-matrix.md sau khi thêm scenarios mới
+
+### "Tôi cần biết bug ở đâu"
+1. Đọc [validation-error-catalog.md](./01_ARCHITECTURE/validation-error-catalog.md) → match error message
+2. Trace rule ID → source code file (từ traceability matrix trong [llms.txt](./llms.txt))
+3. Xem side effects trong [order-status-machine.md](./04_BUSINESS_FLOWS/order-status-machine.md) QC table
+4. Kiểm tra [CHANGE_TRACKING.md](./CHANGE_TRACKING.md) → xem document có outdated không
+
+### "QC muốn biết luồng X đã test chưa"
+1. Mở [test-coverage-matrix.md](./03_API/test-coverage-matrix.md) → tìm endpoint/rule
+2. Xem "Coverage Gaps" section → gaps nào còn mở (hiện tại: 0)
+3. Kiểm tra [CHANGE_TRACKING.md](./CHANGE_TRACKING.md) → có thay đổi code mới chưa cover không
+4. **Staleness check:** nếu Last Verified date > 30 ngày → coi như ⚠️ NEEDS_REVIEW bất kể status
+5. Đọc BDD scenarios trong [bdd/](./03_API/bdd/) → verify Given/When/Then detail (chỉ P0)
+
+### "Tôi cần implement feature mới"
+1. Đọc [llms.txt](./llms.txt) → hiểu system overview
+2. Chọn recipe phù hợp trong file này (CRUD, Background Engine, Validation, etc.)
+3. Follow entity → service → controller mapping
+4. Thêm test scenarios vào file `.test-scenarios.md` tương ứng
+5. Cập nhật [CHANGE_TRACKING.md](./CHANGE_TRACKING.md) đánh dấu documents cần review
 
 ---
 

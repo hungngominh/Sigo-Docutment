@@ -5,47 +5,62 @@
 
 ---
 
+## Cách dùng file này (cho QC và AI agents)
+
+**Câu hỏi: "Luồng cancel refund đã được test chưa?"**
+1. Tìm keyword "refund" hoặc "cancel" trong Section 1 → thấy BR-CANCEL-005, BR-CANCEL-006
+2. Xem cột "Test Scenario(s)" → RC-07 (100%), RC-11 (70%), RC-08 (0%) — đã cover 3 kịch bản
+3. Xem Section 3 "Coverage Gaps" → GAP-004 liên quan, status = ✅ RESOLVED
+4. **Kết luận: Đã cover đầy đủ.**
+
+**Câu hỏi: "Endpoint Booking có bao nhiêu test?"**
+1. Tìm "Booking" trong Section 2 → thấy `POST RentalService/Booking`
+2. Xem cột "Test Scenarios" → B-01 → B-19 (19 scenarios)
+3. **Kết luận: 19 scenarios cover 11 business rules.**
+
+---
+
 ## 1. Business Rule → Test Scenario Cross-Reference
 
 ### Booking Rules (BR-BOOK)
 
 | Rule ID | Rule Description | Test Scenario(s) | API Endpoint | Priority |
 |---------|-----------------|-------------------|--------------|----------|
-| BR-BOOK-001 | FromDate/ToDate bắt buộc phải truyền | B-02, B-03 | Booking | P0 |
-| BR-BOOK-002 | FromDate phải nhỏ hơn ToDate (không được bằng hoặc lớn hơn) | B-04, B-05 | Booking | P0 |
-| BR-BOOK-003 | Không được chọn ngày trong quá khứ | B-06 | Booking | P0 |
-| BR-BOOK-004 | Xe phải được duyệt (IsApproved) và đang hoạt động (không bị tạm ngưng) | B-07, B-08, D-07 | Booking, Detail | P0 |
-| BR-BOOK-005 | Không được trùng lịch booking đã confirmed (ServiceItem_BookedRentalSchedule) | B-09, C-03 | Booking, CheckBefore | P0 |
-| BR-BOOK-006 | Không được trùng ngày bận cố định (ServiceItem_DateBusyRentalSchedule) | B-10 | Booking | P0 |
-| BR-BOOK-007 | Không được trùng ngày bận theo thứ trong tuần (ServiceItem_WeekdaysBusyRentalSchedule) | B-11 | Booking | P1 |
-| BR-BOOK-008 | Số ngày thuê phải >= MinimumRequiredRentalDays | B-12, C-02 | Booking, CheckBefore | P0 |
-| BR-BOOK-009 | Phải đăng nhập mới được đặt xe / cập nhật booking | B-13, U-06 | Booking, UpdateBookingInfo | P0 |
-| BR-BOOK-010 | Không được thuê xe của chính mình (Renter ID != Owner ID) | B-14 | Booking | P0 |
-| BR-BOOK-011 | Khoảng cách giao xe không vượt quá maximumDeliveryMileage | B-15, U-05 | Booking, UpdateBookingInfo | P1 |
-| BR-BOOK-012 | Phải gọi UpdateBookingInfo trước khi Booking (implicit workflow) | (implicit) | Booking | P1 |
-| BR-BOOK-013 | Owner phải xác nhận trong 3 giờ (business hours) → nếu không hệ thống tự huỷ | OC-03, AC-01 | OrderConfirm, SystemCancel | P0 |
-| BR-BOOK-014 | Renter phải đặt cọc trong 3 giờ (business hours) → nếu không hệ thống tự huỷ | OP-02, AC-02 | OrderPay, SystemCancel | P0 |
-| BR-BOOK-015 | Nhận xe yêu cầu cả 2 bên xác nhận (two-sided Begin handshake) | OB-01, OB-02, OB-03, OB-04 | Begin | P0 |
-| BR-BOOK-016 | Chỉ được đánh giá khi đơn ở trạng thái DONE | OR-01, OR-02 | Review | P0 |
-| BR-BOOK-017 | Tự động hoàn thành đơn sau ToDate + 60 phút nếu không có action | AC-03 | SystemCancel (AutoComplete) | P0 |
+| BR-BOOK-001 | FromDate/ToDate bắt buộc phải truyền | B-02 (thiếu FromDate), B-03 (thiếu ToDate) | Booking | P0 |
+| BR-BOOK-002 | FromDate phải nhỏ hơn ToDate (không được bằng hoặc lớn hơn) | B-04 (From>To), B-05 (From==To) | Booking | P0 |
+| BR-BOOK-003 | Không được chọn ngày trong quá khứ | B-06 (ngày quá khứ) | Booking | P0 |
+| BR-BOOK-004 | Xe phải được duyệt (IsApproved) và đang hoạt động (không bị tạm ngưng) | B-07 (suspended), B-08 (chưa duyệt), D-07 (detail xe suspended) | Booking, Detail | P0 |
+| BR-BOOK-005 | Không được trùng lịch booking đã confirmed (ServiceItem_BookedRentalSchedule) | B-09 (overlap booking), C-03 (check overlap), CONC-01 (race condition) | Booking, CheckBefore | P0 |
+| BR-BOOK-006 | Không được trùng ngày bận cố định (ServiceItem_DateBusyRentalSchedule) | B-10 (trùng busy date) | Booking | P0 |
+| BR-BOOK-007 | Không được trùng ngày bận theo thứ trong tuần (ServiceItem_WeekdaysBusyRentalSchedule) | B-11 (trùng weekday busy) | Booking | P1 |
+| BR-BOOK-008 | Số ngày thuê phải >= MinimumRequiredRentalDays | B-12 (ngày < min), C-02 (check min days) | Booking, CheckBefore | P0 |
+| BR-BOOK-009 | Phải đăng nhập mới được đặt xe / cập nhật booking | B-13 (no token), U-06 (no token) | Booking, UpdateBookingInfo | P0 |
+| BR-BOOK-010 | Không được thuê xe của chính mình (Renter ID != Owner ID) | B-14 (thuê xe mình) | Booking | P0 |
+| BR-BOOK-011 | Khoảng cách giao xe không vượt quá maximumDeliveryMileage | B-15 (quá xa), U-05 (distance check) | Booking, UpdateBookingInfo | P1 |
+| BR-BOOK-012 | Phải gọi UpdateBookingInfo trước khi Booking (implicit workflow) | B-20 (skip UpdateBookingInfo) | Booking | P1 |
+| BR-BOOK-013 | Owner phải xác nhận trong 3 giờ (business hours) → nếu không hệ thống tự huỷ | OC-03 (quá hạn confirm), AC-01 (auto cancel) | OrderConfirm, SystemCancel | P0 |
+| BR-BOOK-014 | Renter phải đặt cọc trong 3 giờ (business hours) → nếu không hệ thống tự huỷ | OP-02 (hết hạn cọc), AC-02 (auto cancel) | OrderPay, SystemCancel | P0 |
+| BR-BOOK-015 | Nhận xe yêu cầu cả 2 bên xác nhận (two-sided Begin handshake) | OB-01 (owner begin), OB-02 (renter begin), OB-03 (cả hai → INTHETRIP), OB-04 (1 bên) | Begin | P0 |
+| BR-BOOK-016 | Chỉ được đánh giá khi đơn ở trạng thái DONE | OR-01 (happy path), OR-02 (chưa DONE) | Review | P0 |
+| BR-BOOK-017 | Tự động hoàn thành đơn sau ToDate + 60 phút nếu không có action | AC-03 (auto-complete) | SystemCancel (AutoComplete) | P0 |
 
 ### Cancel Rules (BR-CANCEL)
 
 | Rule ID | Rule Description | Test Scenario(s) | API Endpoint | Priority |
 |---------|-----------------|-------------------|--------------|----------|
-| BR-CANCEL-001 | Renter chỉ được huỷ khi status thuộc {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE} | RC-01, RC-02, RC-03, RC-09, RC-10 | RenterCancel | P0 |
-| BR-CANCEL-002 | Owner chỉ được huỷ khi status thuộc {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE} | OCA-01 | OwnerCancel | P0 |
-| BR-CANCEL-003 | Bắt buộc chọn CancelReasonId khi huỷ | RC-05 | RenterCancel, OwnerCancel | P0 |
-| BR-CANCEL-004 | Nếu lý do huỷ là "another_reason" → bắt buộc nhập CancelReasonDetail | RC-06 | RenterCancel, OwnerCancel | P0 |
-| BR-CANCEL-005 | Huỷ trong FullRefundWithinMinutes (15 phút) → hoàn 100% cọc cho renter | RC-07 | RenterCancel | P0 |
-| BR-CANCEL-006 | Huỷ sát ngày (trong NoRefundGreaterThanDays = 7 ngày trước chuyến) → renter không được hoàn | RC-08 | RenterCancel | P0 |
-| BR-CANCEL-007 | Owner huỷ → luôn hoàn 100% cho renter, owner chịu penalty | OCA-02, OCA-03 | OwnerCancel | P0 |
-| BR-CANCEL-008 | Owner huỷ → ngày bận được tự động đánh dấu (DateBusyRentalSchedule) tránh bị đặt lại | OCA-04 | OwnerCancel | P1 |
-| BR-CANCEL-009 | Owner huỷ → hệ thống có thể tự tạo QuickOrder cho renter tìm xe thay thế | OCA-05 | OwnerCancel | P2 |
-| BR-CANCEL-010 | System timeout: Owner không confirm trong 3 giờ business hours → auto cancel (SYSTEMCANCEL) | AC-01 | SystemCancel | P0 |
-| BR-CANCEL-011 | System timeout: Renter không cọc trong 3 giờ business hours → auto cancel (SYSTEMCANCEL) | AC-02 | SystemCancel | P0 |
-| BR-CANCEL-012 | Auto-complete: đơn INTHETRIP quá hạn trả xe 60 phút → tự hoàn thành (DONE) | AC-03 | SystemCancel (AutoComplete) | P0 |
-| BR-CANCEL-013 | Cancel ratio owner = (số đơn bị huỷ lỗi owner / tổng đơn) × 100%, tính mỗi 7 ngày bởi CalcCancelOrderRatioJob | — (background job) | — | P2 |
+| BR-CANCEL-001 | Renter chỉ được huỷ khi status thuộc {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE} | RC-01 (tại O2C), RC-02 (tại C2D), RC-03 (tại W2CD), RC-09 (INTHETRIP→fail), RC-10 (DONE→fail), RC-11 (70% refund), RC-12 (W2CD cancel) | RenterCancel | P0 |
+| BR-CANCEL-002 | Owner chỉ được huỷ khi status thuộc {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE} | OCA-01 (owner huỷ O2C) | OwnerCancel | P0 |
+| BR-CANCEL-003 | Bắt buộc chọn CancelReasonId khi huỷ | RC-05 (renter thiếu reason), OCC-09 (owner thiếu reason) | RenterCancel, OwnerCancel | P0 |
+| BR-CANCEL-004 | Nếu lý do huỷ là "another_reason" → bắt buộc nhập CancelReasonDetail | RC-06 (renter trống detail), OCC-10 (owner trống detail) | RenterCancel, OwnerCancel | P0 |
+| BR-CANCEL-005 | Huỷ trong FullRefundWithinMinutes (15 phút) → hoàn 100% cọc cho renter | RC-07 (hoàn 100%), RC-11 (>15p >7d → 70%) | RenterCancel | P0 |
+| BR-CANCEL-006 | Huỷ sát ngày (trong NoRefundGreaterThanDays = 7 ngày trước chuyến) → renter không được hoàn | RC-08 (mất cọc) | RenterCancel | P0 |
+| BR-CANCEL-007 | Owner huỷ → luôn hoàn 100% cho renter, owner chịu penalty | OCA-02 (hoàn renter), OCA-03 (phạt owner) | OwnerCancel | P0 |
+| BR-CANCEL-008 | Owner huỷ → ngày bận được tự động đánh dấu (DateBusyRentalSchedule) tránh bị đặt lại | OCA-04 (đánh dấu bận) | OwnerCancel | P1 |
+| BR-CANCEL-009 | Owner huỷ → hệ thống có thể tự tạo QuickOrder cho renter tìm xe thay thế | OCA-05 (auto QuickOrder) | OwnerCancel | P2 |
+| BR-CANCEL-010 | System timeout: Owner không confirm trong 3 giờ business hours → auto cancel (SYSTEMCANCEL) | AC-01 (owner timeout) | SystemCancel | P0 |
+| BR-CANCEL-011 | System timeout: Renter không cọc trong 3 giờ business hours → auto cancel (SYSTEMCANCEL) | AC-02 (renter timeout) | SystemCancel | P0 |
+| BR-CANCEL-012 | Auto-complete: đơn INTHETRIP quá hạn trả xe 60 phút → tự hoàn thành (DONE) | AC-03 (auto-complete) | SystemCancel (AutoComplete) | P0 |
+| BR-CANCEL-013 | Cancel ratio owner = (số đơn bị huỷ lỗi owner / tổng đơn) × 100%, tính mỗi 7 ngày bởi CalcCancelOrderRatioJob | BATCH-01 (integration test) | — (background job) | P2 |
 
 ---
 
@@ -61,11 +76,20 @@
 | `POST RentalService/OrderConfirm` | User phải là owner; status = OWNER2CONFIRM; chưa quá Owner2ConfirmEndTime (BR-BOOK-013) | OC-01 → OC-05 |
 | `POST RentalService/OrderPay` | User phải là renter; status thuộc {CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT}; chưa quá Customer2DepositEndTime (BR-BOOK-014) | OP-01 → OP-04 |
 | `POST Order_ListView_RentCar/Begin` | User phải là owner hoặc renter; status = WAITING2DEPARTURE; two-sided handshake (BR-BOOK-015) | OB-01 → OB-06 |
-| `POST Order_ListView_RentCar/End` | User phải là owner hoặc renter; status = INTHETRIP | OE-01 → OE-03 |
-| `POST Order_ListView_RentCar/RenterCancel` | User phải là renter; status thuộc valid set (BR-CANCEL-001); CancelReasonId required (BR-CANCEL-003); CancelReasonDetail nếu "another_reason" (BR-CANCEL-004); tính hoàn tiền theo policy (BR-CANCEL-005, BR-CANCEL-006) | RC-01 → RC-10 |
-| `POST Order_ListView_RentCar/OwnerCancel` | User phải là owner; status thuộc valid set (BR-CANCEL-002); CancelReasonId required (BR-CANCEL-003); CancelReasonDetail nếu "another_reason" (BR-CANCEL-004); hoàn 100% cho renter + penalty owner (BR-CANCEL-007); đánh dấu ngày bận (BR-CANCEL-008); auto QuickOrder (BR-CANCEL-009) | OCA-01 → OCA-05 |
+| `POST Order_ListView_RentCar/End` | User phải là owner hoặc renter; status = INTHETRIP | OE-01 → OE-03, OEN-07 → OEN-09 |
+| `POST Order_ListView_RentCar/RenterCancel` | User phải là renter; status thuộc valid set (BR-CANCEL-001); CancelReasonId required (BR-CANCEL-003); CancelReasonDetail nếu "another_reason" (BR-CANCEL-004); tính hoàn tiền theo policy (BR-CANCEL-005, BR-CANCEL-006) | RC-01 → RC-12 |
+| `POST Order_ListView_RentCar/OwnerCancel` | User phải là owner; status thuộc valid set (BR-CANCEL-002); CancelReasonId required (BR-CANCEL-003); CancelReasonDetail nếu "another_reason" (BR-CANCEL-004); hoàn 100% cho renter + penalty owner (BR-CANCEL-007); đánh dấu ngày bận (BR-CANCEL-008); auto QuickOrder (BR-CANCEL-009) | OCA-01 → OCA-05, OCC-09, OCC-10 |
 | `POST RentalService/OrderReview` | User phải là owner hoặc renter; status = DONE (BR-BOOK-016) | OR-01 → OR-03 |
 | `AutoCancelOverTimeOrderEngine` (System) | Owner timeout 3h (BR-CANCEL-010); Renter deposit timeout 3h (BR-CANCEL-011); Auto-complete 60 min (BR-CANCEL-012) | AC-01 → AC-03 |
+| `POST RentalService/InsertNewRentalService` | Owner phải đăng nhập; biển số xe unique; thông tin xe bắt buộc | OVM-01 → OVM-04 |
+| `POST RentalService/Submit2Review` | Xe phải ở trạng thái DRAFT; đủ thông tin bắt buộc | OVM-05 → OVM-07 |
+| `POST RentalService/UpdateRentalServiceStatus` | Owner phải sở hữu xe; status transition hợp lệ (ACTIVE/SUSPENDED/DEACTIVE) | OVM-08 → OVM-11 |
+| `POST RentalService/GetCancelOrderInfo` | Order phải tồn tại; trả refund policy cho status hiện tại | OVM-12, OVM-13 |
+| `POST RentalService/OrderConfirmHasPay` | Status = WAITING2CONFIRMDEPOSIT; admin/owner xác nhận | OVM-14, OVM-15 |
+| `POST SearchingRentalService/GetSettingApp` | AllowAnonymous; trả cấu hình app | OVM-16 |
+| `POST SearchingRentalService/SaveLog_UserClick_Rent` | Fire-and-forget; ghi log click | OVM-17 |
+| `GET SearchingRentalService/GetRentalService_SelfdriveCarRental_Alias` | AllowAnonymous; trả danh sách slug SEO | OVM-18 |
+| `POST SearchingRentalService/SearchVouchers` | Trả danh sách voucher áp dụng được cho xe + ngày | SV-01 → SV-04 |
 
 ---
 
@@ -73,34 +97,36 @@
 
 ### Business rules chưa có test scenario rõ ràng
 
-| Gap ID | Mô tả | Rule liên quan | Ghi chú |
-|--------|--------|----------------|---------|
-| GAP-001 | BR-BOOK-012 (phải gọi UpdateBookingInfo trước Booking) không có test case explicit — chỉ implicit trong flow | BR-BOOK-012 | Cần thêm scenario: gọi Booking mà không gọi UpdateBookingInfo trước, verify hành vi |
-| GAP-002 | BR-CANCEL-013 (CalcCancelOrderRatioJob) không có test scenario — đây là background job chạy mỗi 7 ngày | BR-CANCEL-013 | Cần integration test cho job: tạo đơn, owner huỷ, chờ job chạy, verify ratio |
-| GAP-003 | Cancel rules BR-CANCEL-003 và BR-CANCEL-004 chỉ có test cho RenterCancel (RC-05, RC-06), thiếu cho OwnerCancel | BR-CANCEL-003, BR-CANCEL-004 | Cần thêm OCA-06 (owner thiếu CancelReasonId) và OCA-07 (owner chọn "another_reason" nhưng trống detail) |
-| GAP-004 | Chưa có test scenario cho refund kịch bản 2 (huỷ sau FullRefundWithinMinutes nhưng trước NoRefundGreaterThanDays) — RC-07 và RC-08 chỉ cover kịch bản 1 và 3 | BR-CANCEL-005, BR-CANCEL-006 | Cần thêm RC-11: huỷ sau 15 phút nhưng > 7 ngày trước chuyến → hoàn một phần |
-| GAP-005 | Không có test scenario cho WAITING2CONFIRMDEPOSIT status — các cancel scenario chỉ test OWNER2CONFIRM, CUS2DEPOSIT, WAITING2DEPARTURE | BR-CANCEL-001, BR-CANCEL-002 | Cần thêm RC-12: renter huỷ khi status = WAITING2CONFIRMDEPOSIT |
-| GAP-006 | OrderEnd (OE-*) chỉ có 3 scenarios cơ bản — thiếu edge cases: trả xe sớm, trả xe muộn, phí phát sinh | — | Cần thêm: OE-04 (trả sớm), OE-05 (trả muộn có phí), OE-06 (phí phát sinh extra surcharge) |
-| GAP-007 | SearchVouchers endpoint không có test scenarios riêng | — | Cần thêm SV-01 → SV-04: tìm voucher hợp lệ, hết hạn, không áp dụng được cho xe |
-| GAP-008 | Không có test cho concurrent booking (race condition: 2 người đặt cùng xe cùng ngày cùng lúc) | BR-BOOK-005 | Cần load/stress test scenario |
-| GAP-009 | Bảo hiểm hết hạn (B-17) chỉ priority P2 — nhưng đây có thể gây lỗi nghiệp vụ nghiêm trọng nếu xe không có bảo hiểm ra đường | — | Xem xét nâng lên P1 |
+| Gap ID | Mô tả | Rule liên quan | Status | Resolution |
+|--------|--------|----------------|--------|------------|
+| GAP-001 | BR-BOOK-012 (phải gọi UpdateBookingInfo trước Booking) không có test case explicit | BR-BOOK-012 | ✅ RESOLVED | Thêm B-20 vào rental-service.test-scenarios.md |
+| GAP-002 | BR-CANCEL-013 (CalcCancelOrderRatioJob) không có test scenario | BR-CANCEL-013 | ✅ RESOLVED | Thêm BATCH-01 vào ewallet-order-lifecycle.test-scenarios.md |
+| GAP-003 | Cancel rules BR-CANCEL-003/004 thiếu test cho OwnerCancel | BR-CANCEL-003, BR-CANCEL-004 | ✅ RESOLVED | Thêm OCC-09, OCC-10 vào cancel-flow.test-scenarios.md |
+| GAP-004 | Chưa có test cho refund kịch bản 2 (>15 phút, >7 ngày) | BR-CANCEL-005, BR-CANCEL-006 | ✅ RESOLVED | Thêm RC-11 vào rental-service.test-scenarios.md |
+| GAP-005 | Không có test cho WAITING2CONFIRMDEPOSIT cancel | BR-CANCEL-001, BR-CANCEL-002 | ✅ RESOLVED | Thêm RC-12 vào rental-service.test-scenarios.md |
+| GAP-006 | OrderEnd thiếu edge cases (trả sớm, trả muộn, surcharge) | — | ✅ RESOLVED | Thêm OEN-07, OEN-08, OEN-09 vào ewallet-order-lifecycle.test-scenarios.md |
+| GAP-007 | SearchVouchers endpoint không có test | — | ✅ RESOLVED | Thêm SV-01→SV-04 vào rental-service.test-scenarios.md |
+| GAP-008 | Concurrent booking race condition không có test | BR-BOOK-005 | ✅ RESOLVED | Thêm CONC-01 vào rental-service.test-scenarios.md |
+| GAP-009 | B-17 bảo hiểm hết hạn chỉ P2 nhưng nghiêm trọng | — | ✅ RESOLVED | Nâng B-17 từ P2 → P1 |
 
 ### Endpoints chưa có test coverage
 
-| Endpoint | Lý do thiếu |
-|----------|-------------|
-| `POST SearchingRentalService/GetSettingApp` | Endpoint cấu hình app, ít thay đổi — nhưng cần smoke test |
-| `POST SearchingRentalService/SaveLog_UserClick_Rent` | Fire-and-forget logging — cần verify log được ghi đúng |
-| `GET SearchingRentalService/GetRentalService_SelfdriveCarRental_Alias` | SEO alias — cần verify trả đúng danh sách slug |
-| `POST RentalService/InsertNewRentalService` | Luồng đăng ký xe mới — cần test riêng |
-| `POST RentalService/Submit2Review` | Luồng gửi duyệt xe — cần test riêng |
-| `POST RentalService/UpdateRentalServiceStatus` | Thay đổi trạng thái xe — cần test ACTIVE/SUSPENDED/DEACTIVE |
-| `POST RentalService/GetCancelOrderInfo` | Lấy thông tin trước khi huỷ — cần verify chính sách hoàn tiền hiển thị đúng |
-| `POST RentalService/OrderConfirmHasPay` | Xác nhận đơn khi khách đã thanh toán — cần test riêng |
+| Endpoint | Status | Resolution |
+|----------|--------|------------|
+| `POST SearchingRentalService/GetSettingApp` | ✅ COVERED | OVM-16 |
+| `POST SearchingRentalService/SaveLog_UserClick_Rent` | ✅ COVERED | OVM-17 |
+| `GET SearchingRentalService/GetRentalService_SelfdriveCarRental_Alias` | ✅ COVERED | OVM-18 |
+| `POST RentalService/InsertNewRentalService` | ✅ COVERED | OVM-01→OVM-04 |
+| `POST RentalService/Submit2Review` | ✅ COVERED | OVM-05→OVM-07 |
+| `POST RentalService/UpdateRentalServiceStatus` | ✅ COVERED | OVM-08→OVM-11 |
+| `POST RentalService/GetCancelOrderInfo` | ✅ COVERED | OVM-12, OVM-13 |
+| `POST RentalService/OrderConfirmHasPay` | ✅ COVERED | OVM-14, OVM-15 |
 
 ---
 
 ## 4. Test Data Requirements
+
+> **TL;DR:** Cần **7 user accounts** (5 renter/owner + 1 admin + 1 no-token), **6 xe** (active/suspended/not-approved/insurance-expired/electric), **3 voucher** (valid/exhausted/expired), **3 wallet balances**. Chi tiết bên dưới.
 
 ### Dữ liệu cần chuẩn bị theo nhóm scenario
 
@@ -166,14 +192,16 @@
 | Metric | Giá trị |
 |--------|---------|
 | Tổng Business Rules | 30 (17 BR-BOOK + 13 BR-CANCEL) |
-| Tổng Test Scenarios | 75 |
-| Endpoints có test coverage | 12 / 20+ |
-| Coverage gaps đã xác định | 9 |
-| Endpoints chưa có test | 8 |
-| Priority P0 scenarios | ~50 |
-| Priority P1 scenarios | ~18 |
-| Priority P2 scenarios | ~7 |
+| Business Rules covered | 30 / 30 (100%) |
+| Tổng Test Scenarios | 179 (85 rental + 38 cancel + 38 ewallet + 18 vehicle-mgmt) |
+| Endpoints có test coverage | 22 / 22 |
+| Coverage gaps đã xác định | 9 — tất cả ✅ RESOLVED |
+| Endpoints chưa có test | 0 — tất cả ✅ COVERED |
+| BDD Gherkin scenarios | 62 P0 (21 booking + 21 cancel + 20 lifecycle) |
+| Priority P0 scenarios | 60 |
+| Priority P1 scenarios | 25 |
+| Priority P2 scenarios | 10 |
 
 ---
 
-*Cross-reference từ: [rental-service.test-scenarios.md](./rental-service.test-scenarios.md) | [booking-flow.md](../04_BUSINESS_FLOWS/booking-flow.md) | [cancel-flow.md](../04_BUSINESS_FLOWS/cancel-flow.md) | [rental-service.md](./rental-service.md)*
+*Cross-reference từ: [rental-service.test-scenarios.md](./rental-service.test-scenarios.md) | [cancel-flow.test-scenarios.md](./cancel-flow.test-scenarios.md) | [ewallet-order-lifecycle.test-scenarios.md](./ewallet-order-lifecycle.test-scenarios.md) | [owner-vehicle-management.test-scenarios.md](./owner-vehicle-management.test-scenarios.md) | [booking-flow.md](../04_BUSINESS_FLOWS/booking-flow.md) | [cancel-flow.md](../04_BUSINESS_FLOWS/cancel-flow.md) | [rental-service.md](./rental-service.md)*

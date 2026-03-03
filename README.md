@@ -4,6 +4,48 @@
 
 ---
 
+## 5 điều cần biết ngay
+
+| # | Fact | Detail |
+|---|------|--------|
+| 1 | **API URL** | `https://api.sigo.vn/api/v1/` |
+| 2 | **Auth** | JWT Bearer Token — `Authorization: Bearer {token}` |
+| 3 | **Response format** | `EzyResultObject<T>` — `Status: 1` = OK, `0` = Error |
+| 4 | **Service pattern** | `CreateServiceInstance<T>()` factory — **KHÔNG dùng** standard DI |
+| 5 | **Background jobs** | Custom `Ezy.Module.Engine.dll` — **KHÔNG phải** Hangfire |
+
+## Quick Start — API trong 30 giây
+
+```bash
+# 1. Tìm xe ở Hà Nội
+curl -X POST https://api.sigo.vn/api/v1/SearchingRentalService/List \
+  -H "Content-Type: application/json" \
+  -d '{"Address":"Hà Nội","FromDate":"2026-03-10T08:00:00","ToDate":"2026-03-12T20:00:00","PageIndex":1,"PageSize":5}'
+```
+
+```json
+// Response mẫu (Status=1 = thành công)
+{
+  "Status": 1,
+  "Data": {
+    "Data": [{ "Slug": "toyota-vios-ha-noi", "RentalPrice": 650000, "TotalPrice": 1950000 }],
+    "TotalCount": 42
+  }
+}
+```
+
+```bash
+# 2. Đặt xe (cần JWT token)
+curl -X POST https://api.sigo.vn/api/v1/RentalService/Booking \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"RentalServiceItemId":"123","FromDate":"2026-03-10T08:00:00","ToDate":"2026-03-12T20:00:00","DeliveryAddress":"12 Trần Hưng Đạo, HN"}'
+```
+
+> Chi tiết setup local: [setup-dev.md](./06_OPERATIONS/setup-dev.md) | Full JSON examples: [Appendix B](./03_API/rental-service.test-scenarios.md#appendix-b-requestresponse-json-examples)
+
+---
+
 ## Reading Guide — Đọc gì trước?
 
 | Bạn là ai | Bắt đầu từ | Tiếp theo |
@@ -11,7 +53,7 @@
 | **Developer mới** | [overview.md](./01_ARCHITECTURE/overview.md) → [project-structure.md](./01_ARCHITECTURE/project-structure.md) | [base-service-pattern.md](./01_ARCHITECTURE/base-service-pattern.md) → [setup-dev.md](./06_OPERATIONS/setup-dev.md) |
 | **Backend dev (thêm CRUD)** | [base-service-pattern.md](./01_ARCHITECTURE/base-service-pattern.md#tạo-service-mới--step-by-step) | [database-design.md](./01_ARCHITECTURE/database-design.md) → [validation-error-catalog.md](./01_ARCHITECTURE/validation-error-catalog.md) |
 | **Dev tích hợp (MB Bank, MISA...)** | [integrations.md](./02_MODULES/integrations.md) | [integrations/mbbank.md](./03_API/integrations/mbbank.md) → [ewallet.md](./02_MODULES/ewallet.md) |
-| **QA / Tester** | [rental-service.test-scenarios.md](./03_API/rental-service.test-scenarios.md) | [booking-flow.md](./04_BUSINESS_FLOWS/booking-flow.md) → [cancel-flow.md](./04_BUSINESS_FLOWS/cancel-flow.md) |
+| **QA / Tester** | [rental-service.test-scenarios.md](./03_API/rental-service.test-scenarios.md) | [booking-flow.md](./04_BUSINESS_FLOWS/booking-flow.md) → [cancel-flow.md](./04_BUSINESS_FLOWS/cancel-flow.md) → [bdd/](./03_API/bdd/) |
 | **AI Agent / LLM** | [llms.txt](./llms.txt) → [SYSTEM_MAP.md](./SYSTEM_MAP.md) | Theo links trong SYSTEM_MAP |
 | **DevOps** | [deployment.md](./01_ARCHITECTURE/deployment.md) → [setup-dev.md](./06_OPERATIONS/setup-dev.md) | [config-keys.md](./06_OPERATIONS/config-keys.md) → [runbook.md](./06_OPERATIONS/runbook.md) |
 | **Business analyst** | [booking-flow.md](./04_BUSINESS_FLOWS/booking-flow.md) → [pricing-calculation.md](./04_BUSINESS_FLOWS/pricing-calculation.md) | [order-status-machine.md](./04_BUSINESS_FLOWS/order-status-machine.md) → [cancel-flow.md](./04_BUSINESS_FLOWS/cancel-flow.md) |
@@ -59,10 +101,14 @@
 |------|--------|
 | [auth.md](./03_API/auth.md) | Account, OTP, Login, Register |
 | [rental-service.md](./03_API/rental-service.md) | RentalService, SearchingRentalService |
-| [rental-service.test-scenarios.md](./03_API/rental-service.test-scenarios.md) | 75 test scenarios + BDD templates cho AI tạo test case |
-| [cancel-flow.test-scenarios.md](./03_API/cancel-flow.test-scenarios.md) | 36 cancel flow test scenarios |
-| [ewallet-order-lifecycle.test-scenarios.md](./03_API/ewallet-order-lifecycle.test-scenarios.md) | 34 wallet + order lifecycle test scenarios |
+| [rental-service.test-scenarios.md](./03_API/rental-service.test-scenarios.md) | 85 test scenarios + BDD templates cho AI tạo test case |
+| [cancel-flow.test-scenarios.md](./03_API/cancel-flow.test-scenarios.md) | 38 cancel flow test scenarios |
+| [ewallet-order-lifecycle.test-scenarios.md](./03_API/ewallet-order-lifecycle.test-scenarios.md) | 38 wallet + order lifecycle test scenarios |
+| [owner-vehicle-management.test-scenarios.md](./03_API/owner-vehicle-management.test-scenarios.md) | 18 owner vehicle management test scenarios |
 | [test-coverage-matrix.md](./03_API/test-coverage-matrix.md) | QC cross-reference: scenario → business rule → code |
+| [bdd/booking-flow.bdd.md](./03_API/bdd/booking-flow.bdd.md) | BDD Gherkin — P0 booking scenarios |
+| [bdd/cancel-flow.bdd.md](./03_API/bdd/cancel-flow.bdd.md) | BDD Gherkin — P0 cancel scenarios |
+| [bdd/order-lifecycle.bdd.md](./03_API/bdd/order-lifecycle.bdd.md) | BDD Gherkin — P0 order lifecycle scenarios |
 | [order.md](./03_API/order.md) | Order, Payment, Confirm, Cancel |
 | [user.md](./03_API/user.md) | User, Profile, Device |
 | [notification.md](./03_API/notification.md) | Notification, Hub, Support |
@@ -127,8 +173,9 @@
 ### AI Entry Points & QC
 | File | Mục đích |
 |------|---------|
-| [llms.txt](./llms.txt) | Điểm vào cho AI agents — tóm tắt hệ thống + deep-dive links |
-| [SYSTEM_MAP.md](./SYSTEM_MAP.md) | Bản đồ hệ thống cho AI navigation — entity, flow, cross-refs |
+| [llms.txt](./llms.txt) | Điểm vào cho AI agents — tóm tắt hệ thống + deep-dive links + traceability matrix |
+| [SYSTEM_MAP.md](./SYSTEM_MAP.md) | Bản đồ hệ thống cho AI navigation — entity, flow, cross-refs, AI Decision Tree |
+| [CHANGE_TRACKING.md](./CHANGE_TRACKING.md) | Theo dõi tài liệu vs code — trạng thái verified/outdated cho mỗi document |
 
 ---
 
@@ -154,4 +201,4 @@
 
 ---
 
-*Cập nhật lần cuối: 01/03/2026*
+*Cập nhật lần cuối: 03/03/2026*

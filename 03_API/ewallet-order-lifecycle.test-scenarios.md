@@ -43,6 +43,9 @@
 | OEN-04 | End ở trạng thái sai → lỗi | Order status != INTHETRIP (ví dụ WAITING2DEPARTURE) | OrderNumber hợp lệ | Status: 0, msg chứa "bị thay đổi" | P0 | — |
 | OEN-05 | Auto-complete xử lý qua nửa đêm (VN time 23:50) | Order ToDate = 23:50 VN time, auto-complete lúc 00:50 ngày hôm sau | AutoCompleteOrderEngine chạy sau midnight | Auto-complete chạy đúng, không bị lỗi timezone, EndDate = 00:50 ngày mới | P1 | — |
 | OEN-06 | End triggers TransferMoneyEngine → owner wallet funded | Order DONE, Order_Finance có OwnerRemainAmount > 0 | TransferMoneyEngine xử lý | Owner wallet balance tăng đúng OwnerRemainAmount (sau thuế), WalletTransaction ghi nhận | P0 | pricing-calculation.md Section 12 |
+| OEN-07 | Trả xe sớm hơn ToDate | Order status = INTHETRIP, now < ToDate (ví dụ trả trước 1 ngày) | User gọi End sớm | Status → DONE, EndDate = now (< ToDate), TotalPrice và Commission có thể không tính lại (verify hành vi: tính theo booking hay thực tế?) | P1 | — |
+| OEN-08 | Trả xe muộn + phí phát sinh | Order status = INTHETRIP, now > ToDate nhưng < ToDate + 60 phút | User gọi End muộn | Status → DONE, EndDate = now, kiểm tra có tính thêm LateHourReturnFee hoặc ExtraSurcharge không | P1 | — |
+| OEN-09 | Phí extra surcharge khi kết thúc | Order status = INTHETRIP, có phí phát sinh (nhiên liệu, vệ sinh, hư hỏng) | User gọi End kèm ExtraSurchargeAmount > 0 | Status → DONE, Order_Finance.ExtraSurchargeAmount được ghi nhận, TotalPrice cuối cùng tăng thêm surcharge | P1 | — |
 
 ---
 
@@ -74,6 +77,14 @@
 
 ---
 
+## 6. Background Job — CalcCancelOrderRatioJob
+
+| # | Scenario | Precondition | Input | Expected | Priority | Rule |
+|---|----------|-------------|-------|----------|----------|------|
+| BATCH-01 | CalcCancelOrderRatioJob integration test | Owner đã huỷ 2 đơn trong 30 ngày qua, tổng đơn = 10 | Job chạy (chạy mỗi 7 ngày) | User_Calculating.CancelRatio = 20% (2/10), User_Calculating.CancelCount = 2, Owner được đánh dấu nếu vượt ngưỡng cảnh báo | P2 | BR-CANCEL-013 |
+
+---
+
 ## Tham chiếu chéo (Cross-references)
 
 | Tài liệu | Nội dung liên quan |
@@ -87,4 +98,4 @@
 
 ---
 
-*Tổng cộng: **34 test scenarios** covering EWallet deposit/payment, order begin handshake, order end + auto-complete, withdrawal flow, và financial calculations.*
+*Tổng cộng: **38 test scenarios** covering EWallet deposit/payment, order begin handshake, order end + auto-complete, withdrawal flow, financial calculations, và background job integration.*
