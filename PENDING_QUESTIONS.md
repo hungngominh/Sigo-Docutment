@@ -11,10 +11,11 @@
 
 **Vấn đề:** SP hiện tại trả về hardcoded 0 cho tất cả 9 fields (TotalNewOrder, TotalCompletedOrder...).
 
-**Cần trả lời:**
-- [ ] SP này cần implement logic gì? (query nào, bảng nào, điều kiện gì?)
-- [ ] 9 fields cụ thể lấy dữ liệu từ đâu?
-- [ ] BCT = Bộ Công Thương? Báo cáo này dùng cho mục đích gì?
+**Đã xác nhận (2026-03-03):**
+- [x] BCT = **Bộ Công Thương** — báo cáo dùng để khai báo thông tin sàn TMĐT theo quy định
+- [x] SP trả về hardcoded 0 là **đúng theo thiết kế** — dữ liệu báo cáo BCT hiện tại dùng thể bào (placeholder), chưa cần implement logic thực
+
+**Hành động:** Cập nhật `stored-procedures.md` ghi chú SP #8 là placeholder cho báo cáo Bộ Công Thương. ✅
 
 ---
 
@@ -28,19 +29,19 @@
 - `sp_GetReduceWebSupport_Url_Json`
 - `sp_GetIPAddressFromLog_PropertyChanged_Today_Json`
 
-**Trạng thái:** Có trong hệ thống (entity class) nhưng chưa được chạy lên DB PostgreSQL.
+**Đã xác nhận (2026-03-03):** Không cần quan tâm — các SP này không thuộc scope hiện tại.
 
-**Cần trả lời:**
-- [ ] Khi nào dự kiến deploy?
-- [ ] Logic SQL của từng SP là gì?
+**Hành động:** Đóng, không cần document thêm. ✅
 
-## 3. SLA Targets (cần tạo)
+---
+
+## 3. SLA Targets
 
 **File cần tạo:** `05_PERFORMANCE/sla-targets.md`
 
-**Vấn đề:** Chưa có SLA/response time targets chính thức.
+**Trạng thái:** ⏳ Chưa có SLA/response time targets chính thức. Chủ dự án chưa định nghĩa.
 
-**Cần quyết định:**
+**Cần quyết định (khi sẵn sàng):**
 - [ ] API response time mục tiêu (ví dụ: P95 < 500ms)
 - [ ] Uptime target (ví dụ: 99.9%)
 - [ ] Slow API threshold (khi nào alert?)
@@ -52,12 +53,12 @@
 
 **File:** `06_OPERATIONS/runbook.md`
 
-**Các mục cần bổ sung bước khắc phục chi tiết:**
-- [ ] "MB Bank chuyển tiền thất bại" — cần thêm: retry logic, fallback thủ công, escalation path
-- [ ] "Kafka/message tắc" — cần thêm: cách clear backlog, resume consumers, monitor lag
+**Trạng thái:** ⏳ Chưa có quy trình chi tiết. Chủ dự án chưa định nghĩa.
 
-**Ghi chú:** Chủ dự án chưa có quy trình chi tiết cho 2 mục này.
+**Cần bổ sung (khi sẵn sàng):**
+- [ ] "MB Bank chuyển tiền thất bại" — retry logic, fallback thủ công, escalation path
+- [ ] "Kafka/message tắc" — cách clear backlog, resume consumers, monitor lag
 
 ---
 
-*Cập nhật lần cuối: khi tạo file*
+*Cập nhật lần cuối: 2026-03-03*

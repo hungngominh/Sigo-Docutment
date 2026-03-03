@@ -665,7 +665,7 @@ ORDER BY m."EntityId", m."NotifyAt" DESC
 
 ## 8. sp_GetDataReportWebsite4BCT_Json
 
-**Mục đích:** Báo cáo thống kê website cho Bộ Công Thương (BCT).
+**Mục đích:** Báo cáo thống kê website cho **Bộ Công Thương (BCT)** — khai báo bắt buộc theo quy định quản lý sàn TMĐT tại Việt Nam.
 
 **Caller:** `BCTController.GetListReportWebsite4BCT()` (line 49)
 **File:** `AllianceMiddlemanWebAPI/Controllers/AppSystem/BCTController.cs`
@@ -691,8 +691,9 @@ ORDER BY m."EntityId", m."NotifyAt" DESC
 | tongGiaTriGiaoDich | decimal | Tổng giá trị giao dịch (VNĐ) |
 
 **Business logic:**
-- Báo cáo bắt buộc theo quy định TMĐT Bộ Công Thương
-- Tập hợp: truy cập, owner, xe, đơn hàng, doanh thu trong kỳ
+- Báo cáo bắt buộc theo quy định TMĐT Bộ Công Thương (Nghị định 52/2013/NĐ-CP và các văn bản liên quan)
+- Sigo phải khai báo định kỳ: số lượt truy cập, số người bán, số xe, số đơn, doanh thu
+- **SP trả về hardcoded 0 là đúng theo thiết kế hiện tại** — đây là placeholder (thể bào), dữ liệu thực chưa cần tổng hợp tự động, có thể nhập tay qua admin khi nộp báo cáo
 
 **SQL Logic:**
 ```sql
