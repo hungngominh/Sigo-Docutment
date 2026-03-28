@@ -44,18 +44,24 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
                     {
                         DetailScreen = true;
 
-                        #region Avatar
+                        // Capture values before parallel group
+                        var rentalServiceItemId = RentalServiceItem.Id;
+                        var userLoginId = ID_ConvertStringToPKId(UserLoginId);
 
-                        perfTracker.Start("BuildDictServiceItem_ImageAsync");
-                        var (dictAvaImage, dictImages) =
-                            await SearchingVehicleHelper.BuildDictServiceItem_ImageAsync(new long[]
-                                { RentalServiceItem.Id });
-                        var avaImage = dictAvaImage.GetValue_Dic(RentalServiceItem.Id);
-                        var images = dictImages.GetValue_Dic(RentalServiceItem.Id);
-                        perfTracker.Stop("BuildDictServiceItem_ImageAsync");
+                        perfTracker.Start("ParallelGroup");
 
-                        #endregion
+                        // GROUP 1: Independent async operations (parallel)
+                        var tempDocResult = new RentalServicePublicModel();
+                        var tempReviewResult = new RentalServicePublicModel();
 
+                        var imageTask = SearchingVehicleHelper.BuildDictServiceItem_ImageAsync(new long[] { rentalServiceItemId });
+                        var docSecurityTask = GetDocumentAndSecurityAsync(tempDocResult, RentalServiceItem);
+                        var reviewTask = GetReviewAsync(tempReviewResult);
+                        var busyScheduleTask = GetBusySchedules(param);
+                        var featuresTask = GetFeaturesAsync(RentalServiceItem);
+                        var defaultNoteTask = GetDefaultNoteAsync(userLoginId);
+
+                        // GROUP 2: Synchronous work on current thread while IO tasks are in flight
                         param.NeedGetCriteriaPoint = true;
                         perfTracker.Start("GetTotalPriceModel");
                         var totalPriceModel = GetTotalPriceModel(param);
@@ -75,6 +81,27 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
 
                         #endregion
 
+                        // Wait for all parallel tasks
+                        try
+                        {
+                            await Task.WhenAll(imageTask, docSecurityTask, reviewTask,
+                                busyScheduleTask, featuresTask, defaultNoteTask);
+                        }
+                        catch (Exception ex)
+                        {
+                            var failedTasks = new Task[] { imageTask, docSecurityTask, reviewTask, busyScheduleTask, featuresTask, defaultNoteTask }
+                                .Where(t => t.IsFaulted);
+                            foreach (var ft in failedTasks)
+                                SaveLogException(ft.Exception?.InnerException ?? ft.Exception, "GetDetailAsync_ParallelGroup", param);
+                            throw;
+                        }
+                        perfTracker.Stop("ParallelGroup");
+
+                        // Assign parallel results
+                        var (dictAvaImage, dictImages) = imageTask.Result;
+                        var avaImage = dictAvaImage.GetValue_Dic(rentalServiceItemId);
+                        var images = dictImages.GetValue_Dic(rentalServiceItemId);
+
                         result = BuildPublicData<RentalServicePublicModel>(totalPriceModel, RentalServiceItem,
                             avaImage);
                         result.DeliveryInfo = deliveryInfo;
@@ -83,6 +110,14 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
                             RentalServiceItem.Vehicle_RentalSetting.HaveDeliverySurcharge ?? false;
                         result.ImageUrls = SearchingVehicleHelper.GetServiceItem_ImageFileUrl(images);
                         result.FullDescription = RentalServiceItem.FullDescription;
+                        result.Features = featuresTask.Result;
+                        result.BusySchedules = busyScheduleTask.Result;
+                        result.MessageToOwner = defaultNoteTask.Result;
+
+                        // Copy from temp objects (MUST be before BookingFeatureInfos which uses result.Securities)
+                        result.Documents = tempDocResult.Documents;
+                        result.Securities = tempDocResult.Securities;
+                        result.Review = tempReviewResult.Review;
 
                         #region Popular Place
 
@@ -163,22 +198,6 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
                             }
                         }
                         perfTracker.Stop("OwnerInfo");
-
-                        #endregion
-
-                        #region Feature
-
-                        perfTracker.Start("GetFeatures");
-                        result.Features = GetFeatures(RentalServiceItem);
-                        perfTracker.Stop("GetFeatures");
-
-                        #endregion
-
-                        #region Document / Security
-
-                        perfTracker.Start("GetDocumentAndSecurityAsync");
-                        await GetDocumentAndSecurityAsync(result, RentalServiceItem);
-                        perfTracker.Stop("GetDocumentAndSecurityAsync");
 
                         #endregion
 
@@ -285,18 +304,10 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
 
                         #endregion
 
-                        #region Review
-
-                        perfTracker.Start("GetReviewAsync");
-                        await GetReviewAsync(result);
-                        perfTracker.Stop("GetReviewAsync");
-
-                        #endregion
-
                         #region Voucher
 
                         perfTracker.Start("GetVouchers");
-                        param.Id = RentalServiceItem.Id.ToString();
+                        param.Id = rentalServiceItemId.ToString();
                         result.Vouchers = GetVouchers(param, out sMessage);
                         perfTracker.Stop("GetVouchers");
 
@@ -447,36 +458,6 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
                             Value = c.Id.ToString(),
                             NeedShowExt = c.ShowExtReason ?? false
                         }).ToArray();
-
-                        #endregion
-
-                        #region Busy Schedules
-                        perfTracker.Start("GetBusySchedules");
-                        result.BusySchedules = await GetBusySchedules(param);
-                        perfTracker.Stop("GetBusySchedules");
-
-                        #endregion
-                        #region Get default note
-                        perfTracker.Start("GetDefaultNote");
-                        using (var repoO = DC_CreateRepository<Order>())
-                        {
-                            var now = DateTime_Now().Date;
-                            var userLoginId = ID_ConvertStringToPKId(UserLoginId);
-                            // Lấy cái cuối cùng
-                            var order = repoO.GetQueryable(t => t.RenterId == userLoginId && t.StatusCode == OrderStatus.OWNER2CONFIRM).OrderByDescending(t => t.Id).FirstOrDefault();
-                            if (order != null)
-                            {
-                                result.MessageToOwner = order.MessageToOwner;
-                            }
-                            else
-                            {
-                                // lấy cái cuối cùng
-                                order = repoO.GetQueryable(t => t.RenterId == userLoginId && (t.StatusCode == OrderStatus.CUSCANCEL || t.StatusCode == OrderStatus.OWNERCANCEL || t.StatusCode == OrderStatus.SYSTEMCANCEL) && t.Log_CreatedDate.HasValue && t.Log_CreatedDate.Value.Date == now).OrderByDescending(t => t.Id).FirstOrDefault();
-                                if (order != null)
-                                    result.MessageToOwner = order.MessageToOwner;
-                            }
-                        }
-                        perfTracker.Stop("GetDefaultNote");
 
                         #endregion
                     }
