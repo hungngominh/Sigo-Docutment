@@ -5,6 +5,7 @@ using AllianceMiddlemanWebAPI.Shared.Helper;
 using AllianceMiddlemanWebAPI.Shared.Models;
 using Ezy.Module.Library.UI;
 using Ezy.Module.Library.Utilities;
+using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml.FormulaParsing;
 using System;
 using System.Collections.Generic;
@@ -508,6 +509,33 @@ namespace AllianceMiddlemanWebAPI.Shared.Services
             catch { /* don't let perf logging break the flow */ }
 
             return (result, sMessage);
+        }
+
+        private async Task<string> GetDefaultNoteAsync(long? userLoginId)
+        {
+            string messageToOwner = null;
+            using (var repoO = DC_CreateRepository<Order>())
+            {
+                var now = DateTime_Now().Date;
+                var order = await repoO.GetQueryable(t => t.RenterId == userLoginId && t.StatusCode == OrderStatus.OWNER2CONFIRM)
+                    .OrderByDescending(t => t.Id)
+                    .FirstOrDefaultAsync();
+                if (order != null)
+                {
+                    messageToOwner = order.MessageToOwner;
+                }
+                else
+                {
+                    order = await repoO.GetQueryable(t => t.RenterId == userLoginId
+                        && (t.StatusCode == OrderStatus.CUSCANCEL || t.StatusCode == OrderStatus.OWNERCANCEL || t.StatusCode == OrderStatus.SYSTEMCANCEL)
+                        && t.Log_CreatedDate.HasValue && t.Log_CreatedDate.Value.Date == now)
+                        .OrderByDescending(t => t.Id)
+                        .FirstOrDefaultAsync();
+                    if (order != null)
+                        messageToOwner = order.MessageToOwner;
+                }
+            }
+            return messageToOwner;
         }
     }
 }
