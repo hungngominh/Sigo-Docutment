@@ -1,0 +1,147 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>AllianceMiddlemanWebAPI.Shared</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>AllianceMiddlemanWebAPI.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AllianceMiddlemanWebAPI.Core\AllianceMiddlemanWebAPI.Core.csproj" />
+    <ProjectReference Include="..\AllianceMiddlemanWebAPI.DataShared\AllianceMiddlemanWebAPI.DataShared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="EPPlus">
+      <HintPath>..\Libs\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AppSystemCore">
+      <HintPath>..\Libs\Ezy.APIService.AppSystemCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AppSystemService">
+      <HintPath>..\Libs\Ezy.APIService.AppSystemService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AuthShared">
+      <HintPath>..\Libs\Ezy.APIService.AuthShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.Core">
+      <HintPath>..\Libs\Ezy.APIService.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.CoreUtilities">
+      <HintPath>..\Libs\Ezy.APIService.CoreUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.EmailMessage">
+      <HintPath>..\Libs\Ezy.APIService.EmailMessage.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.ExcelHelper">
+      <HintPath>..\Libs\Ezy.APIService.ExcelHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.ReleaseService">
+      <HintPath>..\Libs\Ezy.ApiService.ReleaseService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.Shared">
+      <HintPath>..\Libs\Ezy.APIService.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SharedController">
+      <HintPath>..\Libs\Ezy.APIService.SharedController.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SMSCore">
+      <HintPath>..\Libs\Ezy.APIService.SMSCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SQLLogCore">
+      <HintPath>..\Libs\Ezy.APIService.SQLLogCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseCache">
+      <HintPath>..\Libs\Ezy.Module.BaseCache.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseData">
+      <HintPath>..\Libs\Ezy.Module.BaseData.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseMSSQLData">
+      <HintPath>..\Libs\Ezy.Module.BaseMSSQLData.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseService">
+      <HintPath>..\Libs\Ezy.Module.BaseService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.Core">
+      <HintPath>..\Libs\Ezy.Module.CMS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.Shared">
+      <HintPath>..\Libs\Ezy.Module.CMS.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Controller">
+      <HintPath>..\Libs\Ezy.Module.Controller.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DataShared">
+      <HintPath>..\Libs\Ezy.Module.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DisplayInfo.Core">
+      <HintPath>..\Libs\Ezy.Module.DisplayInfo.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DisplayInfo.Share">
+      <HintPath>..\Libs\Ezy.Module.DisplayInfo.Share.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Engine">
+      <HintPath>..\Libs\Ezy.Module.Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.Core">
+      <HintPath>..\Libs\Ezy.Module.EWallet.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.Shared">
+      <HintPath>..\Libs\Ezy.Module.EWallet.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Infrastructure">
+      <HintPath>..\Libs\Ezy.Module.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Library">
+      <HintPath>..\Libs\Ezy.Module.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.LogPath">
+      <HintPath>..\Libs\Ezy.Module.LogPath.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Media">
+      <HintPath>..\Libs\Ezy.Module.Media.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Message">
+      <HintPath>..\Libs\Ezy.Module.Message.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.MSSQLRepository">
+      <HintPath>..\Libs\Ezy.Module.MSSQLRepository.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.Core">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.Shared">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet">
+      <HintPath>..\Libs\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp">
+      <HintPath>..\Libs\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Tako.CRC">
+      <HintPath>..\Libs\Tako.CRC.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
+    <PackageReference Include="FirebaseDatabase.NetCore50" Version="4.0.6" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\CoreServices\" />
+    <Folder Include="Services\ReportingService\" />
+  </ItemGroup>
+
+</Project>
