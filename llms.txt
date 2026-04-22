@@ -1,0 +1,274 @@
+# AllianceMiddleman (Sigo API)
+
+> Self-drive car rental platform backend for Vietnam market.
+> Connects vehicle Owners with Renters through a managed marketplace.
+
+## System Identity
+
+- Name: AllianceMiddleman (commercial: Sigo API)
+- URL: https://api.sigo.vn
+- Tech: ASP.NET Core 5.0, EF Core 5.0, SQL Server + PostgreSQL, Redis, Kafka, SignalR, Docker
+- Language: C#, Vietnamese UI strings
+- Deploy: Docker multi-stage, Jenkins CI/CD
+
+## Architecture (4-Layer)
+
+```
+[1] AllianceMiddlemanWebAPI        — Controllers, JWT Auth, SignalR Hub, Compression
+[2] AllianceMiddlemanWebAPI.Service — Business Logic, Validation, 29+ Background Engines
+[3] AllianceMiddlemanWebAPI.Core    — EF Core, DbContext, 17 Stored Procedures
+[4] AllianceMiddlemanWebAPI.DataShared — Shared DTOs between layers
+    Modules: Ezy.Module.EWallet, Identity, CMS, DynamicReport, TrafficTicket, Hotline
+```
+
+## Key Conventions
+
+| Pattern | Details |
+|---------|---------|
+| Response wrapper | `EzyResultObject<T>` — Status: 1=OK, 0=Error, -1=ServerError, -2=Unauthorized |
+| Paginated list | `EzyDataSourceResult<T>` — Data[] + TotalCount |
+| Entity base | `IEFBaseEntity` — Id (long), IsDeleted, Log_CreatedDate/By, Log_UpdatedDate/By |
+| Service factory | `CreateServiceInstance<T>()` — NOT standard DI, factory pattern |
+| Cache system | `CachedDataManagement` — 70+ config tables cached in-memory |
+| Background jobs | Custom `Ezy.Module.Engine.dll` framework, NOT Hangfire |
+| ID format | `long` in DB, `string` in API models (auto-converted) |
+| Timezone | DB stores UTC; client sends `UI_TimezoneOffset=-420` (VN=UTC+7) |
+
+## Order Status Machine (9 statuses)
+
+```
+NEW → OWNER2CONFIRM → CUS2DEPOSIT → WAITING2CONFIRMDEPOSIT → WAITING2DEPARTURE → INTHETRIP → DONE
+         ↓                ↓                   ↓                      ↓
+    SYSTEMCANCEL     CUSCANCEL           CUSCANCEL              CUSCANCEL
+    OWNERCANCEL      OWNERCANCEL         OWNERCANCEL            OWNERCANCEL
+    CUSCANCEL        SYSTEMCANCEL
+```
+
+Cancelable: {OWNER2CONFIRM, CUS2DEPOSIT, WAITING2CONFIRMDEPOSIT, WAITING2DEPARTURE}
+Terminal: {DONE, CUSCANCEL, OWNERCANCEL, SYSTEMCANCEL}
+Auto-complete: INTHETRIP → DONE after ToDate + 60 minutes
+
+## Pricing Pipeline (condensed)
+
+```
+1. GetRentalDaySegments()      → Split rental into Early/FullDay/Late segments
+2. GetOriginalPrice()          → Sum segment prices (DatePrice > WeekdayPrice > BasePrice)
+3. GetPriceByDay()             → Apply multiday discount, voucher
+4. TotalPrice = SubTotal + InsuranceFee + DeliveryFee - DiscountMoney
+5. DepositAmount = TotalPrice × 30% (or fixed amount)
+6. PlanProfitAmount = SubTotal × CompletionFee% + ServiceFee - DiscountMoney
+7. OwnerRemainAmount = DepositAmount - PlanProfitAmount - InsuranceFee - WithholdingTax
+```
+
+### Worked Example — Thuê xe 3 ngày
+
+```
+Input:  Toyota Vios, Hà Nội, 10/03 08:00 → 12/03 20:00
+        BasePrice = 650,000 VND/ngày, không có DatePrice/WeekdayPrice override
+        InsuranceFee = 35,000/ngày, DeliveryFee = 50,000, Voucher = 10% (max 200,000)
+        CompletionFee = 25%, ServiceFee = 30,000, WithholdingTax = 0
+
+Step 1: GetRentalDaySegments()
+  → [FullDay 10/03, FullDay 11/03, Late 12/03 (=1 full day vì ≥12h)]
+  → 3 full days
+
+Step 2: GetOriginalPrice()
+  → 3 × 650,000 = 1,950,000
+
+Step 3: GetPriceByDay()
+  → SubTotal = 1,950,000
+  → DiscountMoney = min(1,950,000 × 10%, 200,000) = 195,000
+
+Step 4: TotalPrice = 1,950,000 + 105,000 + 50,000 - 195,000 = 1,910,000
+Step 5: DepositAmount = 1,910,000 × 30% = 573,000
+Step 6: PlanProfitAmount = 1,950,000 × 25% + 30,000 - 195,000 = 322,500
+Step 7: OwnerRemainAmount = 573,000 - 322,500 - 105,000 - 0 = 145,500
+
+→ Renter trả cọc: 573,000 VND
+→ Platform giữ: 322,500 VND
+→ Owner nhận: 145,500 VND (tạm, nhận thêm phần còn lại khi hoàn thành)
+```
+
+## Business Rules Quick Reference
+
+| Rule | Value | Source |
+|------|-------|--------|
+| Default deposit | 30% of TotalPrice | `RentalServiceCategorySettingJsonModel.DepositPercent` |
+| Cancel full refund window | 15 minutes after deposit | `CancelOrderSetting.FullRefundWithinMinutes` |
+| Cancel no-refund window | 7 days before rental | `CancelOrderSetting.NoRefundGreaterThanDays` |
+| Cancel penalty | 30% of deposit | `PenaltyDepositPercent` |
+| Commission cascade | ServiceItem → Owner → Category → System default | `CompletionFeePercentage` |
+| Owner confirm timeout | 3 hours (business hours) | `HourOwner2Confirm` |
+| Renter deposit timeout | 3 hours (business hours) | `HourCustomer2Deposit` |
+| Business hours | 7:00 - 21:00 VN time | `RentalServiceCategorySettingJsonModel` |
+| Auto-complete | 60 min after ToDate | `AutoCompleteOrder_AfterMinutes` |
+| Early/Late hour fee | hours × rate × 1000 VND | `EarlyHourDeliveryFee`, `LateHourReturnFee` |
+| ≥12h early/late | Counted as full day | `NumOfHourToBeOneDay = 12` |
+| Min withdrawal | 2,000 VND | MB Bank integration |
+| Daily wallet limit | 60,000,000 VND | `ConfigWalletType.DailyLimit` |
+| Search radius | 30km default | `MaxDistance` |
+| Insurance check | CoverageStartDate ≤ rental ≤ CoverageEndDate | `Vehicle_InsuranceInformation` |
+
+## Configuration Cascade
+
+```
+SystemConfig (global defaults)
+  → RentalServiceCategorySettingJsonModel (per category)
+    → Vehicle_RentalSetting (per vehicle)
+      → ServiceItem-level overrides (per rental item)
+```
+
+## Documentation Map
+
+### 01_ARCHITECTURE/ — System Design
+| File | Purpose |
+|------|---------|
+| overview.md | System description, 4-layer architecture, tech stack, middleware pipeline |
+| project-structure.md | Solution structure, DI configuration, startup pipeline |
+| base-service-pattern.md | CRUD framework, EzyResultObject, pagination, creating new services |
+| database-design.md | Schema, entities, EF Core mappings, indexes |
+| stored-procedures.md | 17 SPs: parameters, return types, SQL logic, callers |
+| helper-algorithms.md | 6 helper classes: pricing engine, search pipeline, delivery fee, FCM, wallet |
+| background-engines.md | 29 engines + 9 batch jobs + 2 hosted services |
+| notification-system.md | FCM, SignalR hub, notification templates, scheduling |
+| file-upload.md | Google Drive, image compression, SFTP, static files |
+| security-middleware.md | JWT, CORS, authorization, error handling, request logging, 2FA |
+| validation-error-catalog.md | Validation rules, error messages, discount logic, timezone patterns |
+| deployment.md | Docker, Jenkins, environments |
+
+### 02_MODULES/ — Business Modules
+| File | Purpose |
+|------|---------|
+| core-appsystem.md | Account, staff, device system |
+| core-user.md | User management, verification |
+| core-vehicle.md | Vehicle entities, insurance |
+| core-order.md | Order lifecycle, payment |
+| core-rental-service.md | Rental service, service items |
+| core-notification.md | Notification module |
+| ewallet.md | E-wallet, transactions, wallet integrity |
+| identity.md | User identity management |
+| integrations.md | Third-party integration overview |
+| cms.md | Content management |
+| dynamic-report.md | Dynamic reporting |
+| traffic-ticket.md | Traffic violation tracking |
+| hotline.md | OMI Call integration |
+
+### 03_API/ — API Reference
+| File | Purpose |
+|------|---------|
+| auth.md | Account, OTP, Login, Register |
+| rental-service.md | RentalService, SearchingRentalService |
+| rental-service.test-scenarios.md | 85 test scenarios for AI test generation |
+| test-coverage-matrix.md | QC cross-reference: rule → scenario → endpoint |
+| cancel-flow.test-scenarios.md | 38 cancel flow test scenarios |
+| ewallet-order-lifecycle.test-scenarios.md | 38 wallet/lifecycle test scenarios |
+| owner-vehicle-management.test-scenarios.md | 18 vehicle management test scenarios |
+| order.md | Order, Payment, Confirm, Cancel |
+| user.md | User, Profile, Device |
+| notification.md | Notification, Hub, Support |
+| vehicle.md | Vehicle, Insurance, Setting |
+| service-item.md | ServiceItem, DatePrice, Schedule |
+| quick-order.md | QuickOrderRequest, Suggestion |
+| categories.md | All Config* controllers, actual data |
+| reports.md | Financial reports |
+| ewallet.md | EWallet — deposit/withdraw/transfer |
+| traffic-ticket.md | Traffic violation lookup |
+| hotline.md | Hotline — OMI Call integration |
+| cms.md | CMS — Blog, News, Topic |
+| dynamic-report.md | Dynamic reporting API |
+| integrations/mbbank.md | MB Bank — OAuth2, RSA, TransferFund |
+| integrations/misa-invoice.md | MISA Invoice |
+| integrations/mioto.md | Mioto — vehicle/price/trip sync |
+| integrations/vietqr.md | VietQR — account lookup, KYC |
+
+### 04_BUSINESS_FLOWS/ — Business Workflows
+| File | Purpose |
+|------|---------|
+| booking-flow.md | Search → book → pay → pickup → return → rate |
+| cancel-flow.md | Renter/owner/system cancel with refund formulas |
+| pricing-calculation.md | 14 detailed pricing formulas with examples |
+| order-status-machine.md | 9 order statuses with state machine diagram |
+| owner-onboarding.md | Vehicle registration and approval workflow |
+| ewallet-withdraw.md | Withdrawal flow and transaction status |
+
+### 05_PERFORMANCE/ — Performance Analysis
+| File | Purpose |
+|------|---------|
+| top10-api-report.md | Top 10 most-called APIs detailed analysis |
+| db-optimization-notes.md | Database optimization notes |
+
+### 06_OPERATIONS/ — DevOps & Operations
+| File | Purpose |
+|------|---------|
+| setup-dev.md | Local development setup |
+| config-keys.md | appsettings, SystemConfigKeys, CachedDataManagement |
+| runbook.md | Common incident handling |
+
+### 07_ADR/ — Architecture Decision Records
+15 ADRs covering: framework choice, layered architecture, databases, JWT, EF Core, Redis, Kafka, SignalR, background engines, modular design, Docker, Jenkins, API versioning, response wrapper, MB Bank integration.
+
+### Supporting Files
+| File | Purpose |
+|------|---------|
+| SYSTEM_MAP.md | Code generation companion — recipes, method contracts, entity mapping, AI Decision Tree |
+| README.md | Main index with audience-specific reading guides |
+| CHANGE_TRACKING.md | Document vs code alignment tracking — verified/outdated status per document |
+
+## Recommended Reading Order
+
+**For AI code generation:** llms.txt → SYSTEM_MAP.md → base-service-pattern.md → relevant module doc
+**For understanding system:** llms.txt → overview.md → order-status-machine.md → pricing-calculation.md
+**For QC/testing:** test-coverage-matrix.md → business flow docs (QC sections) → test-scenarios files
+
+---
+
+## Traceability Quick Reference
+
+> Business Rule ID → Test Scenario ID → Source Code file.
+> Dùng cho AI agents trace nhanh từ rule đến code cần kiểm tra.
+
+| Business Rule | Test Scenarios | Source File | Verified |
+|--------------|----------------|-------------|----------|
+| BR-BOOK-001 | B-02, B-03 | OrderService_UserAction.cs:BookRentalService() | 2026-03-02 |
+| BR-BOOK-002 | B-04, B-05 | OrderService_UserAction.cs:BookRentalService() | 2026-03-02 |
+| BR-BOOK-003 | B-06 | OrderService_UserAction.cs:BookRentalService() | 2026-03-02 |
+| BR-BOOK-004 | B-07, B-08, D-07 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-005 | B-09, C-03, CONC-01 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-006 | B-10 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-007 | B-11 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-008 | B-12, C-02 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-009 | B-13, U-06 | [Authorize] attribute on controller | 2026-03-02 |
+| BR-BOOK-010 | B-14 | OrderService_UserAction.cs:BookRentalService() | 2026-03-02 |
+| BR-BOOK-011 | B-15, U-05 | RentalServiceItemService_Booking.cs:CheckCanBookRentalService() | 2026-03-02 |
+| BR-BOOK-012 | B-20 | OrderService_UserAction.cs:BookRentalService() (implicit) | 2026-03-02 |
+| BR-BOOK-013 | OC-03, AC-01 | AutoCancelOverTimeOrderEngine.cs | 2026-03-02 |
+| BR-BOOK-014 | OP-02, AC-02, EDP-08 | AutoCancelOverTimeOrderEngine.cs | 2026-03-02 |
+| BR-BOOK-015 | OB-01→OB-06 (alias: OBG-01→OBG-06 in BDD) | OrderService_UserAction.cs:Begin() | 2026-03-02 |
+| BR-CANCEL-001 | RCC-01→RCC-06, RC-11, RC-12 | OrderService_UserAction.cs:RenterCancel() | 2026-03-02 |
+| BR-CANCEL-002 | OCC-01 | OrderService_UserAction.cs:OwnerCancel() | 2026-03-02 |
+| BR-CANCEL-003 | RCC-07, OCC-09 | CancelBookingEngine.cs | 2026-03-02 |
+| BR-CANCEL-004 | RCC-08, OCC-10 | CancelBookingEngine.cs | 2026-03-02 |
+| BR-CANCEL-005 | RCC-04, RCC-05, REF-01, REF-02, RC-11 | RentCarHelper.cs:CalcRerturnDepositAmount() | 2026-03-02 |
+| BR-CANCEL-006 | RCC-06, REF-03 | RentCarHelper.cs:CalcRerturnDepositAmount() | 2026-03-02 |
+| BR-CANCEL-007 | OCC-03, OCC-04, REF-04 | RentCarHelper.cs:CalcRerturnDepositAmount() | 2026-03-02 |
+| BR-CANCEL-010 | SCC-01 | AutoCancelOverTimeOrderEngine.cs | 2026-03-02 |
+| BR-CANCEL-011 | SCC-02 | AutoCancelOverTimeOrderEngine.cs | 2026-03-02 |
+| BR-CANCEL-012 | OEN-02 | AutoCompleteOrderEngine.cs | 2026-03-02 |
+| BR-CANCEL-013 | BATCH-01 | CalcCancelOrderRatioJob.cs | 2026-03-02 |
+
+## Coverage Dashboard
+
+| Metric | Before (2026-02-28) | After (2026-03-02) | Status |
+|--------|--------|-------|--------|
+| Business Rules defined | 30 | 30 | — |
+| Business Rules covered | 28 | 30 | ✅ 100% |
+| Test Scenarios | 75 + 36 + 34 = 145 | 85 + 38 + 38 + 18 = 179 | +34 new |
+| Endpoints with coverage | 12 / 20+ | 22 / 22 | ✅ All covered |
+| Coverage Gaps (open) | 9 | 0 | ✅ All resolved |
+| BDD Gherkin scenarios | 0 | 62 P0 (21 booking + 21 cancel + 20 lifecycle) | ✅ New |
+
+## Change Tracking
+
+> Xem chi tiết tại [CHANGE_TRACKING.md](./CHANGE_TRACKING.md).
+> Mỗi document có trạng thái: ✅ VERIFIED | ⚠️ NEEDS_REVIEW | ❌ OUTDATED.
+> Last full review: 2026-03-02.
