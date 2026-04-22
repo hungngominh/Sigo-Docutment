@@ -456,7 +456,7 @@ namespace Ezy.Module.Insurance.Shared.Providers.Vifo
         public string CertificateUrl { get; set; }
 
         [JsonProperty("created_at")]
-        public string CreatedAt { get; set; }
+        public VifoCreatedAt CreatedAt { get; set; }
     }
 
     // ============================================================
@@ -541,7 +541,7 @@ namespace Ezy.Module.Insurance.Shared.Providers.Vifo
         public int? Seat { get; set; }
     }
 
-    /// <summary>TNCAR – Car civil liability / CARSHORT payload</summary>
+    /// <summary>TNCAR – Car civil liability payload. Uses product_code (not family_code/provider_code).</summary>
     public class VifoCarPayload
     {
         [JsonProperty("product_code")]
