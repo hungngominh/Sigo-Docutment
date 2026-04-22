@@ -847,6 +847,28 @@ namespace AllianceMiddlemanWebAPI.Shared.Helper
                 }
                 insurancePercentPerDay ??= (model.ServiceInfo.SettingJson.InsurancePercentPerDay ?? 0);
                 result = totalPrice * (insurancePercentPerDay.Value / 100m);
+
+                var vifoConfig = InsuranceHelper.GetVifoConfig();
+                if (vifoConfig.IsUsingBooking)
+                {
+                    if (TryGetVifoTotalPrice(model, vifoConfig, out decimal vifoPrice, out string vifoError))
+                    {
+                        result = vifoPrice;
+                    }
+                    else if (!string.IsNullOrEmpty(vifoError))
+                    {
+                        GGNotifyHelper.SendMessageGGChat_SystemReport($"Lấy giá bảo hiểm Vifo thất bại, dùng giá ước tính. Lỗi: {vifoError}. Xe có slug {rentalServiceItem.Slug}");
+                        LogLogicHelper.LogError(new LogLogicErrorModel
+                        {
+                            ClientData     = JsonHelper.SerializeObject(new { rentalServiceItem.Slug, vifoError }),
+                            MainEntityId   = rentalServiceItem.Id.ToString(),
+                            MainEntityType = "RentalServiceItem",
+                            Message        = vifoError,
+                            Method         = "TryGetVifoTotalPrice",
+                            StartAt        = DateTime.UtcNow
+                        }, "TryGetVifoTotalPrice", "System", null, null);
+                    }
+                }
             }
             if (needLogLogic)
             {
