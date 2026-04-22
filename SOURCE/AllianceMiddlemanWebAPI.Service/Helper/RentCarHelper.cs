@@ -884,11 +884,14 @@ namespace AllianceMiddlemanWebAPI.Shared.Helper
             if (string.IsNullOrEmpty(vehicle.PlateNumber) || vehicle.YearModel == null || vehicle.VehicleNoOfSeatId == null)
                 return false;
 
+            if (rentInfo.UI_TimezoneOffset == null || rentInfo.FromDate == null || rentInfo.ToDate == null)
+                return false;
+
             if (!InsuranceHelper.HasProvider("VIFO"))
                 InsuranceHelper.RegisterVifo(vifoConfig);
 
             var ui_TimezoneOffset = rentInfo.UI_TimezoneOffset.Value;
-            var now = DateTime.UtcNow.AddMinutes(-ui_TimezoneOffset).Date;
+            var now = DateTime.UtcNow.AddMinutes(ui_TimezoneOffset).Date;
             DateTime fromDate = rentInfo.FromDate.Value.AddMinutes(ui_TimezoneOffset).Date,
                      toDate   = rentInfo.ToDate.Value.AddMinutes(ui_TimezoneOffset).Date;
             if (fromDate < now) fromDate = now;
