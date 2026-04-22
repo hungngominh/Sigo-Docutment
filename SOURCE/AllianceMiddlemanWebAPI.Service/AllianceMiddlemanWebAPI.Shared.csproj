@@ -14,10 +14,12 @@
   <ItemGroup>
     <ProjectReference Include="..\AllianceMiddlemanWebAPI.Core\AllianceMiddlemanWebAPI.Core.csproj" />
     <ProjectReference Include="..\AllianceMiddlemanWebAPI.DataShared\AllianceMiddlemanWebAPI.DataShared.csproj" />
-    <ProjectReference Include="..\Ezy.Module.Insurance\Ezy.Module.Insurance.Service\Ezy.Module.Insurance.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Ezy.Module.Insurance.Shared">
+      <HintPath>..\Libs\Ezy.Module.Insurance.Shared.dll</HintPath>
+    </Reference>
     <Reference Include="EPPlus">
       <HintPath>..\Libs\EPPlus.dll</HintPath>
     </Reference>
