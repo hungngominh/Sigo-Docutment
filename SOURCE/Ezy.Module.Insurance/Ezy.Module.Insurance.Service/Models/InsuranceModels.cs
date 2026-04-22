@@ -164,7 +164,7 @@ namespace Ezy.Module.Insurance.Shared.Models
         /// <summary>URL file hợp đồng/chứng nhận bảo hiểm đầu tiên</summary>
         public string ContractUrl { get; set; }
 
-        /// <summary>Thời điểm tạo đơn (UTC)</summary>
+        /// <summary>Thời điểm tạo đơn (timezone từ provider; normalize về UTC trước khi lưu)</summary>
         public DateTime? CreatedAt { get; set; }
 
         public object RawData { get; set; }
