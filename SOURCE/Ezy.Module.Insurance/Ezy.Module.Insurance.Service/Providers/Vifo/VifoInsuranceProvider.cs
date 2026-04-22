@@ -145,8 +145,14 @@ namespace Ezy.Module.Insurance.Shared.Providers.Vifo
                 result.OrderNumber         = data.Data?.OrderNumber;
                 result.ExternalId          = data.Data?.Id;
                 result.ProviderOrderNumber = data.Data?.ProviderOrderNumber;
-                result.ContractUrl         = data.Data?.ContractFiles?.FirstOrDefault()?.Url;
-                result.CreatedAt           = data.Data?.CreatedAt?.Date;
+                result.ContractUrl = data.Data?.ContractFiles?.FirstOrDefault()?.Url; // first file = primary contract
+                result.CreatedAt = data.Data?.CreatedAt?.Date.HasValue == true
+                    ? DateTime.SpecifyKind(
+                        data.Data.CreatedAt.Date.Value,
+                        string.Equals(data.Data.CreatedAt.Timezone, "UTC", StringComparison.OrdinalIgnoreCase)
+                            ? DateTimeKind.Utc
+                            : DateTimeKind.Unspecified)
+                    : (DateTime?)null;
                 result.RawData             = data.Data;
             }
             catch (Exception ex)
