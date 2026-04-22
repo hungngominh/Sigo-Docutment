@@ -1,0 +1,791 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="App_Data\Setting.txt" />
+    <None Remove="App_Data\Setting_Log.txt" />
+    <None Remove="App_Data\Setting_LogMethod.txt" />
+    <None Remove="App_Data\Setting_TestAPI.txt" />
+    <None Remove="Avatar\A.png" />
+    <None Remove="Avatar\B.png" />
+    <None Remove="Avatar\C.png" />
+    <None Remove="Avatar\car.jpg" />
+    <None Remove="Avatar\D.png" />
+    <None Remove="Avatar\E.png" />
+    <None Remove="Avatar\F.png" />
+    <None Remove="Avatar\G.png" />
+    <None Remove="Avatar\H.png" />
+    <None Remove="Avatar\I.png" />
+    <None Remove="Avatar\J.png" />
+    <None Remove="Avatar\K.png" />
+    <None Remove="Avatar\L.png" />
+    <None Remove="Avatar\M.png" />
+    <None Remove="Avatar\N.png" />
+    <None Remove="Avatar\O.png" />
+    <None Remove="Avatar\P.png" />
+    <None Remove="Avatar\Q.png" />
+    <None Remove="Avatar\R.png" />
+    <None Remove="Avatar\S.png" />
+    <None Remove="Avatar\System.png" />
+    <None Remove="Avatar\T.png" />
+    <None Remove="Avatar\U.png" />
+    <None Remove="Avatar\Unassigned.png" />
+    <None Remove="Avatar\V.png" />
+    <None Remove="Avatar\W.png" />
+    <None Remove="Avatar\X.png" />
+    <None Remove="Avatar\Y.png" />
+    <None Remove="Avatar\Z.png" />
+    <None Remove="Icon\ban-do-chi-duong.jpg" />
+    <None Remove="Icon\ban-do-vietmap.jpg" />
+    <None Remove="Icon\bluetooth.jpg" />
+    <None Remove="Icon\booking.png" />
+    <None Remove="Icon\call-50.png" />
+    <None Remove="Icon\call-50_disable.png" />
+    <None Remove="Icon\call.png" />
+    <None Remove="Icon\call_disable.png" />
+    <None Remove="Icon\cam-bien-va-cham.jpg" />
+    <None Remove="Icon\camera-360.jpg" />
+    <None Remove="Icon\camera-hanh-trinh.jpg" />
+    <None Remove="Icon\camera-lui.jpg" />
+    <None Remove="Icon\cancel.png" />
+    <None Remove="Icon\canh-bao-toc-do.jpg" />
+    <None Remove="Icon\car-insurance.png" />
+    <None Remove="Icon\car-rental-black.png" />
+    <None Remove="Icon\car-return.png" />
+    <None Remove="Icon\car-seat.png" />
+    <None Remove="Icon\card.png" />
+    <None Remove="Icon\cashless-payment.png" />
+    <None Remove="Icon\clock.png" />
+    <None Remove="Icon\cmnd-sau.png" />
+    <None Remove="Icon\cmnd-truoc.png" />
+    <None Remove="Icon\cua-so-troi.jpg" />
+    <None Remove="Icon\deposit.png" />
+    <None Remove="Icon\dinh-vi-gps.jpg" />
+    <None Remove="Icon\document.png" />
+    <None Remove="Icon\done.png" />
+    <None Remove="Icon\gas-station.png" />
+    <None Remove="Icon\gauge.png" />
+    <None Remove="Icon\gearbox.png" />
+    <None Remove="Icon\ic-auto-trans.png" />
+    <None Remove="Icon\ic-diesel.png" />
+    <None Remove="Icon\ic-electric.png" />
+    <None Remove="Icon\ic-gas.png" />
+    <None Remove="Icon\ic-hybrid.png" />
+    <None Remove="Icon\ic-no-security.png" />
+    <None Remove="Icon\identity-card.png" />
+    <None Remove="Icon\info.png" />
+    <None Remove="Icon\jerrycan.png" />
+    <None Remove="Icon\khe-cam-usb.jpg" />
+    <None Remove="Icon\lop-xe-du-phong.jpg" />
+    <None Remove="Icon\man-hinh-android.jpg" />
+    <None Remove="Icon\money.png" />
+    <None Remove="Icon\offer.png" />
+    <None Remove="Icon\passport.png" />
+    <None Remove="Icon\review.png" />
+    <None Remove="Icon\sms-50.png" />
+    <None Remove="Icon\sms-50_disable.png" />
+    <None Remove="Icon\sms-64.png" />
+    <None Remove="Icon\sms-64_disable.png" />
+    <None Remove="Icon\sms.png" />
+    <None Remove="Icon\sms_disable.png" />
+    <None Remove="Icon\sport-car.png" />
+    <None Remove="Icon\tui-khi-an-toan.jpg" />
+    <None Remove="Icon\vehicle-make\acura.png" />
+    <None Remove="Icon\vehicle-make\audi.png" />
+    <None Remove="Icon\vehicle-make\bmw.png" />
+    <None Remove="Icon\vehicle-make\chevrolet.png" />
+    <None Remove="Icon\vehicle-make\ford.png" />
+    <None Remove="Icon\vehicle-make\honda.png" />
+    <None Remove="Icon\vehicle-make\hyundai.png" />
+    <None Remove="Icon\vehicle-make\kia.png" />
+    <None Remove="Icon\vehicle-make\lexus.png" />
+    <None Remove="Icon\vehicle-make\mazda.png" />
+    <None Remove="Icon\vehicle-make\mitsubishi.png" />
+    <None Remove="Icon\vehicle-make\nissan.png" />
+    <None Remove="Icon\vehicle-make\peugot.png" />
+    <None Remove="Icon\vehicle-make\renault.png" />
+    <None Remove="Icon\vehicle-make\subaru.png" />
+    <None Remove="Icon\vehicle-make\toyota.png" />
+    <None Remove="Icon\vehicle-make\vinfast.png" />
+    <None Remove="Icon\vehicle-make\wolkswagen.png" />
+    <None Remove="Icon\vehicle-type-sub\2-pick up.png" />
+    <None Remove="Icon\vehicle-type-sub\4-hatchback.png" />
+    <None Remove="Icon\vehicle-type-sub\4-minicar.png" />
+    <None Remove="Icon\vehicle-type-sub\4-sedan.png" />
+    <None Remove="Icon\vehicle-type-sub\5-cuv.png" />
+    <None Remove="Icon\vehicle-type-sub\7-mpv.png" />
+    <None Remove="Icon\vehicle-type-sub\7-suv.png" />
+    <None Remove="Icon\vehicle-type-sub\family-minivan.png" />
+    <None Remove="Icon\vespa.png" />
+    <None Remove="Icon\wifi.jpg" />
+    <None Remove="logo\csv.png" />
+    <None Remove="logo\default.png" />
+    <None Remove="logo\docx.png" />
+    <None Remove="logo\logo-default.jpg" />
+    <None Remove="logo\logo-sigo.jpg" />
+    <None Remove="logo\logo-sigo.png" />
+    <None Remove="logo\pdf.png" />
+    <None Remove="logo\txt.png" />
+    <None Remove="logo\xlsx.png" />
+    <None Remove="Views\Home\index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Icon\vehicle-make\acura.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\audi.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\bmw.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\chevrolet.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\ford.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\honda.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\hyundai.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\kia.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\lexus.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\mazda.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\mitsubishi.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\nissan.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\peugot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\renault.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\subaru.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\toyota.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\vinfast.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-make\wolkswagen.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="App_Data\Setting.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="App_Data\Setting_Log.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="App_Data\Setting_LogMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="App_Data\Setting_TestAPI.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\A.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\B.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\C.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\car.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\D.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\E.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\F.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\G.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\H.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\I.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\J.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\K.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\L.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\M.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\N.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\O.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\P.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\Q.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\R.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\S.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\System.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\T.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\U.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\Unassigned.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\V.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\W.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\X.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\Y.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Avatar\Z.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ban-do-chi-duong.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ban-do-vietmap.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\bluetooth.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\booking.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\call-50.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\call-50_disable.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\call.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\call_disable.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cam-bien-va-cham.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\camera-360.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\camera-hanh-trinh.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\camera-lui.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cancel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\canh-bao-toc-do.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\car-insurance.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\car-rental-black.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\car-return.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\car-seat.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\card.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cashless-payment.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\clock.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cmnd-sau.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cmnd-truoc.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\cua-so-troi.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\deposit.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\dinh-vi-gps.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\document.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\done.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\gas-station.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\gauge.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\gearbox.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-auto-trans.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-diesel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-electric.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-gas.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-hybrid.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\ic-no-security.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\identity-card.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\info.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\jerrycan.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\khe-cam-usb.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\lop-xe-du-phong.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\man-hinh-android.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\money.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\offer.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\passport.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\review.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\sms-50.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\sms-50_disable.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\sms.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\sms_disable.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\sport-car.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\tui-khi-an-toan.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\2-pick up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\4-hatchback.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\4-minicar.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\4-sedan.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\5-cuv.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\7-mpv.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\7-suv.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vehicle-type-sub\family-minivan.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\vespa.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Icon\wifi.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\csv.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\default.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\docx.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\logo-default.jpg" />
+    <Content Include="logo\logo-sigo.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\pdf.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\txt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="logo\xlsx.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\Home\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GoogleAuthenticator" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="5.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="5.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AllianceMiddlemanWebAPI.Core\AllianceMiddlemanWebAPI.Core.csproj" />
+    <ProjectReference Include="..\AllianceMiddlemanWebAPI.DataShared\AllianceMiddlemanWebAPI.DataShared.csproj" />
+    <ProjectReference Include="..\AllianceMiddlemanWebAPI.Service\AllianceMiddlemanWebAPI.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Confluent.Kafka">
+      <HintPath>..\Libs\Confluent.Kafka.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AppSystemAPI">
+      <HintPath>..\Libs\Ezy.APIService.AppSystemAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AppSystemCore">
+      <HintPath>..\Libs\Ezy.APIService.AppSystemCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AppSystemService">
+      <HintPath>..\Libs\Ezy.APIService.AppSystemService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.AuthShared">
+      <HintPath>..\Libs\Ezy.APIService.AuthShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.Core">
+      <HintPath>..\Libs\Ezy.APIService.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.CoreUtilities">
+      <HintPath>..\Libs\Ezy.APIService.CoreUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.EmailMessage">
+      <HintPath>..\Libs\Ezy.APIService.EmailMessage.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.ExcelHelper">
+      <HintPath>..\Libs\Ezy.APIService.ExcelHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.HRMAPI">
+      <HintPath>..\Libs\Ezy.APIService.HRMAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.HRMCore">
+      <HintPath>..\Libs\Ezy.APIService.HRMCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.HRMService">
+      <HintPath>..\Libs\Ezy.APIService.HRMService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.LogChange">
+      <HintPath>..\Libs\Ezy.APIService.LogChange.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.LogService">
+      <HintPath>..\Libs\Ezy.APIService.LogService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.NotifyAPI">
+      <HintPath>..\Libs\Ezy.ApiService.NotifyAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.NotifyCore">
+      <HintPath>..\Libs\Ezy.ApiService.NotifyCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.NotifyService">
+      <HintPath>..\Libs\Ezy.ApiService.NotifyService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.Release.API">
+      <HintPath>..\Libs\Ezy.ApiService.Release.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.Release.Core">
+      <HintPath>..\Libs\Ezy.ApiService.Release.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.ReleaseService">
+      <HintPath>..\Libs\Ezy.ApiService.ReleaseService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.Shared">
+      <HintPath>..\Libs\Ezy.APIService.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SharedController">
+      <HintPath>..\Libs\Ezy.APIService.SharedController.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SMSCore">
+      <HintPath>..\Libs\Ezy.APIService.SMSCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.APIService.SQLLogCore">
+      <HintPath>..\Libs\Ezy.APIService.SQLLogCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.SystemTestAPI">
+      <HintPath>..\Libs\Ezy.ApiService.SystemTestAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.SystemTestCore">
+      <HintPath>..\Libs\Ezy.ApiService.SystemTestCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ApiService.SystemTestService">
+      <HintPath>..\Libs\Ezy.ApiService.SystemTestService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.AutoNotification.API">
+      <HintPath>..\Libs\Ezy.Module.AutoNotification.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.AutoNotification.Core">
+      <HintPath>..\Libs\Ezy.Module.AutoNotification.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.AutoNotification.Shared">
+      <HintPath>..\Libs\Ezy.Module.AutoNotification.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseCache">
+      <HintPath>..\Libs\Ezy.Module.BaseCache.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseData">
+      <HintPath>..\Libs\Ezy.Module.BaseData.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseMSSQLData">
+      <HintPath>..\Libs\Ezy.Module.BaseMSSQLData.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.BaseService">
+      <HintPath>..\Libs\Ezy.Module.BaseService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.API">
+      <HintPath>..\Libs\Ezy.Module.CMS.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.Core">
+      <HintPath>..\Libs\Ezy.Module.CMS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.DataShared">
+      <HintPath>..\Libs\Ezy.Module.CMS.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.CMS.Shared">
+      <HintPath>..\Libs\Ezy.Module.CMS.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Controller">
+      <HintPath>..\Libs\Ezy.Module.Controller.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DataShared">
+      <HintPath>..\Libs\Ezy.Module.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DisplayInfo.Core">
+      <HintPath>..\Libs\Ezy.Module.DisplayInfo.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DisplayInfo.Share">
+      <HintPath>..\Libs\Ezy.Module.DisplayInfo.Share.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DynamicReport.API">
+      <HintPath>..\Libs\Ezy.Module.DynamicReport.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DynamicReport.Core">
+      <HintPath>..\Libs\Ezy.Module.DynamicReport.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DynamicReport.DataShared">
+      <HintPath>..\Libs\Ezy.Module.DynamicReport.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.DynamicReport.Shared">
+      <HintPath>..\Libs\Ezy.Module.DynamicReport.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Engine">
+      <HintPath>..\Libs\Ezy.Module.Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.API">
+      <HintPath>..\Libs\Ezy.Module.EWallet.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.Core">
+      <HintPath>..\Libs\Ezy.Module.EWallet.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.DataShared">
+      <HintPath>..\Libs\Ezy.Module.EWallet.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.EWallet.Shared">
+      <HintPath>..\Libs\Ezy.Module.EWallet.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Facebook.Interface">
+      <HintPath>..\Libs\Ezy.Module.Facebook.Interface.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Facebook.Package.MSSQL">
+      <HintPath>..\Libs\Ezy.Module.Facebook.Package.MSSQL.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Facebook.Profile">
+      <HintPath>..\Libs\Ezy.Module.Facebook.Profile.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Facebook.Share">
+      <HintPath>..\Libs\Ezy.Module.Facebook.Share.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Infrastructure">
+      <HintPath>..\Libs\Ezy.Module.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Library">
+      <HintPath>..\Libs\Ezy.Module.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.LogPath">
+      <HintPath>..\Libs\Ezy.Module.LogPath.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Media">
+      <HintPath>..\Libs\Ezy.Module.Media.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.Message">
+      <HintPath>..\Libs\Ezy.Module.Message.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.MSSQLRepository">
+      <HintPath>..\Libs\Ezy.Module.MSSQLRepository.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.API">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.Core">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.DataShared">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.DataShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.Module.TrafficTicket.Shared">
+      <HintPath>..\Libs\Ezy.Module.TrafficTicket.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ModuleGoogleService">
+      <HintPath>..\Libs\Ezy.ModuleGoogleService.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ProjectAPIMgmt">
+      <HintPath>..\Libs\Ezy.ProjectAPIMgmt.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ProjectAPIMgmtCore">
+      <HintPath>..\Libs\Ezy.ProjectAPIMgmtCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Ezy.ProjectAPIMgmtService">
+      <HintPath>..\Libs\Ezy.ProjectAPIMgmtService.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\Libs\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core">
+      <HintPath>..\Libs\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.SqlClient">
+      <HintPath>..\Libs\Microsoft.Data.SqlClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Relational">
+      <HintPath>..\Libs\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.SqlServer">
+      <HintPath>..\Libs\Microsoft.EntityFrameworkCore.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Identity.Client">
+      <HintPath>..\Libs\Microsoft.Identity.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="MimeMapping">
+      <HintPath>..\Libs\MimeMapping.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp">
+      <HintPath>..\Libs\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IdentityModel.Tokens.Jwt">
+      <HintPath>..\Libs\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Dynamic.Core">
+      <HintPath>..\Libs\System.Linq.Dynamic.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Tako.CRC">
+      <HintPath>..\Libs\Tako.CRC.dll</HintPath>
+    </Reference>
+    <Reference Include="Z.EntityFramework.Extensions.EFCore">
+      <HintPath>..\Libs\Z.EntityFramework.Extensions.EFCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ReportTemplate\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Controllers\MainBusiness\QuickOrderSuggestionController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ReportTemplate\eng.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
